@@ -6,7 +6,7 @@ https://unsplash.com/photos/delicate-white-wildflowers-bloom-in-a-sunlit-meadow-
 
 
 Playground thumbnails (Janice Khang projects):
-- Pixel Window: `jkhang9/Widget-Demo`, resized from `assets/hero.jpg`.
+- IOS window widget: user-supplied screenshot from October 16, 2026 at 4:38 PM, resized proportionally and converted to WebP.
 - NEXT 30: `jkhang9/next30-claude`, resized from `poster.png`.
 - ASCII Paint: a frame rendered from `jkhang9/-ASCII-001-Hero/v2/hero.js` using a scripted pointer gesture.
 - ASCII Fireworks: the 680 ms bloom rendered from `jkhang9/-ASCII-002-Fireworks/index.html`.
