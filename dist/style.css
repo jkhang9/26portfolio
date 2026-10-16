@@ -187,3 +187,12 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 
 /* About is a placeholder for now: one centred line. */
 .about-page.under-construction{min-height:100%;background:none;box-shadow:none;border:0;display:flex;align-items:center;justify-content:center;padding:0}.about-page.under-construction[hidden]{display:none}.under-construction p{margin:0;font:var(--type-meta);color:var(--muted);text-align:center}
+/* Contact links follow the content on mobile; desktop keeps the side rail. */
+.contact-footer{display:contents}
+@media(max-width:720px){
+ .sheet{padding-bottom:0}
+ .frame-scroll{border-bottom:0}
+ .contact-footer{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:40px;padding:16px 0 12px;border-top:1px solid var(--accent)}
+ .contact-footer .social-links{position:static;flex-direction:row;justify-content:center;gap:12px}
+ .contact-footer .copyright-vertical{position:static;writing-mode:horizontal-tb;transform:none;white-space:normal;text-align:center;font-size:10px}
+}
