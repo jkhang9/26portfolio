@@ -1,25 +1,27 @@
 (() => {
   'use strict';
+  // Quiet Skies: one of three dithered scenes (Veil, Cloudsea, Galaxy), chosen at random on each load.
+  // Scrolling the sheet moves the scene's story forward: Work starts it, Playground deepens it, About me completes it.
+  // Pause stops ambient motion only.
   const host = document.querySelector('.dither-bg');
   const canvas = host?.querySelector('canvas');
-  const ctx = canvas?.getContext('2d');
-  if (!ctx) return;
+  if (!canvas) return;
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true });
   const preference = matchMedia('(prefers-reduced-motion: reduce)');
   const toggle = document.createElement('button');
   toggle.className = 'background-motion';
   toggle.type = 'button';
   document.body.append(toggle);
-  const bayer = [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
-  let width = 0, height = 0, phase = 0, last = 0, raf = 0;
-  let playing = !preference.matches, ink, muted;
-  const pointer = { x: -1, y: -1 };
+  const SCENE = Math.floor(Math.random() * 3);
+  let playing = !preference.matches, raf = 0, last = 0, T = 20 + Math.random() * 60, P = 0;
+  let colors = { muted: [.57, .6, .62], ink: [.91, .91, .9] };
   const sheet = document.querySelector('.sheet');
+  const scroller = document.getElementById('frame-scroll');
   const dividers = [...document.querySelectorAll('.registration,.sheet>footer')];
-  // A slower, continuous highlight confined to the top edge.
+
+  // Top-edge highlight (unchanged from the original).
   let edgePosition = null, edgeTarget = 0, edgeRAF = 0, edgeLast = 0;
-  function drawEdge() {
-    sheet.style.setProperty('--edge-x', edgePosition + 'px');
-  }
+  function drawEdge() { sheet.style.setProperty('--edge-x', edgePosition + 'px'); }
   function travelEdge(time) {
     edgeRAF = 0;
     const delta = edgeTarget - edgePosition;
@@ -42,107 +44,292 @@
     }
   }
 
+  // Story position per sheet: [start, length] on a 0..1 scale.
+  const spans = [[.35, .25], [.6, .2], [.8, .2]];
+  function targetPhase() {
+    const page = Number(sheet?.dataset.page || 0);
+    const [start, len] = spans[page] || spans[0];
+    let s = 1;
+    if (scroller) {
+      const max = scroller.scrollHeight - scroller.clientHeight;
+      s = max > 2 ? scroller.scrollTop / max : 1;
+    }
+    return start + len * Math.min(1, Math.max(0, s));
+  }
+
+  const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const FS = `precision highp float;
+uniform vec2 R;uniform float DPR;uniform float T;uniform float P;uniform float STEP;uniform float TINT;uniform float SCENE;uniform vec3 MUTED;uniform vec3 INK;
+#define PI 3.14159265
+float b2(vec2 a){a=floor(a);return fract(dot(a,vec2(.5,a.y*.75)));}
+float b4(vec2 a){return b2(.5*a)*.25+b2(a);}
+float h(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);
+ return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
+float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);for(int i=0;i<4;i++){v+=a*n(p);p=m*p;a*=.5;}return v;}
+
+const float HZ=-.2;
+
+// one curtain of light; y is height above the horizon
+float curtain(vec2 s,float y,float fk){
+ float x=s.x*(.9+fk*.35)+fk*5.1;
+ float t=T*(.010+fk*.004);
+ float ph=x*1.25+t*2.;
+ float fold=fbm(vec2(x*.8+t,fk*3.+T*.012));
+ float yc=.11+fk*.085+.10*sin(ph+fold*2.4)+.035*fbm(vec2(x*3.,fk));
+ float dy=y-yc;
+ float hang=dy>0.?exp(-dy/(.13+.16*fold)):exp(-dy*dy/.0008);
+ float slope=cos(ph+fold*2.4);
+ float turn=.55+.75*pow(1.-abs(slope),4.);
+ float xs=x+dy*.55+.05*sin(dy*9.+fold*4.);
+ float rays=.22+.78*pow(n(vec2(xs*38.,t*3.+fk*7.)),2.)*(.5+.5*n(vec2(xs*120.,fk+T*.02)));
+ float fringe=exp(-dy*dy/.00012)*.55*(.45+.55*n(vec2(x*140.,T*.08+fk)));
+ float side=smoothstep(.05,.75,abs(s.x)/(R.x/R.y*.5));
+ float span=(.15+.85*smoothstep(.2,.6,fbm(vec2(x*.55+fk*2.,T*.007))))*(.55+.65*side);
+ return (hang*rays*turn+fringe)*span;
+}
+
+float sky(vec2 s,vec2 starCell,out float ink){
+ float y=s.y-HZ;
+ float l=.03+.42*exp(-abs(y)*10.)*(.35+.65*smoothstep(0.,.9,P))+.06*exp(-abs(y)*2.);
+ // a faint band of tiny stars crossing the sky
+ float band=exp(-pow((s.y-.22-s.x*.22)/.13,2.));
+ l+=band*.09*fbm(s*5.)*(.5+.5*fbm(s*24.));
+ // stars: three depths, dim ones as dots, bright ones as ink
+ float hs=h(starCell);
+ float sp=smoothstep(0.,.12,y);
+ l=max(l,step(.985,hs)*.32*sp);
+ ink=step(.9965,hs)*(.7+.3*sin(T*.2+hs*40.))*sp*(1.-.35*smoothstep(.5,1.,P));
+ // curtains wake one by one
+ for(int k=0;k<3;k++){
+  float fk=float(k);
+  float g=smoothstep(.08+fk*.24,.45+fk*.24,P);
+  l+=curtain(s,y,fk)*g*(1.-fk*.22)*2.6;
+ }
+ // soft upper wash
+ l+=.07*smoothstep(.2,1.,P)*exp(-abs(y-.33)*3.5);
+ return l;
+}
+
+float ridges(vec2 s,float y,float base){
+ float l=base;
+ for(int k=0;k<3;k++){
+  float fk=float(k);
+  float hk=HZ+.006+(.07-fk*.018)*fbm(vec2(s.x*(1.1+fk*.9)+fk*9.,fk*2.))-fk*.006;
+  if(s.y<hk){
+   float haze=.10-fk*.035+.05*smoothstep(.3,1.,P)*(1.-fk*.5);
+   float tex=.05*step(.62,fract((hk-s.y)*(160.-fk*40.)+fbm(s*30.)*.6));
+   l=haze+tex*(1.-fk*.3);
+  }
+ }
+ return l;
+}
+
+
+float veil(vec2 p,vec2 cell,float K,out float ink){
+ float l;ink=0.;
+ if(p.y>=HZ){
+  l=sky(p,cell,ink);
+  l=ridges(p,p.y-HZ,l);
+ }else{
+  float dep=HZ-p.y;
+  vec2 s=vec2(p.x,2.*HZ-p.y);
+  float wob=sin(p.y*(170.-dep*90.)+T*.45)*.0035*(1.+dep*9.)+sin(p.x*30.+p.y*60.+T*.3)*.0015;
+  s.x+=wob;
+  float sink;
+  l=sky(s,floor(s*K),sink);
+  l=ridges(s,s.y-HZ,l);
+  float streak=.45+.55*smoothstep(.25,.75,n(vec2(p.x*2.5+T*.004,p.y*170.+T*.06)));
+  l*=.62*streak*(1.-dep*.5);
+  ink=sink*.5*streak*step(.5,h(cell+3.));
+  float hg=h(cell+5.);ink=max(ink,step(.99,hg)*pow(.5+.5*sin(T*.35+hg*60.),6.)*smoothstep(.2,.55,l)*.8);
+ }
+ l+=exp(-pow((p.y-HZ)/.022,2.))*(.06+.12*smoothstep(.3,1.,P))*(.5+.5*fbm(vec2(p.x*2.5+T*.01,p.y*20.)));
+ return l;
+}
+
+// ---------- Galaxy: a wide band of stars and dust crossing the sky ----------
+float galaxy(vec2 p,vec2 cell,out float ink){
+ float glow=smoothstep(0.,1.,P);
+ float a=-.42;
+ vec2 q=vec2(p.x*cos(a)-p.y*sin(a),p.x*sin(a)+p.y*cos(a));
+ q.x+=T*.0035;
+ float w=.15+.06*fbm(vec2(q.x*1.4,3.));
+ float off=.07*fbm(vec2(q.x*.8,1.))-.035;
+ float d=(q.y-off)/w;
+ float core=exp(-d*d*1.5);
+ float halo=exp(-d*d*.25);
+ float clouds=fbm(q*vec2(3.,6.)+vec2(T*.002,0.))*.6+fbm(q*vec2(10.,20.))*.4;
+ float side=smoothstep(.05,.75,abs(p.x)/(R.x/R.y*.5));
+ float l=.025+core*(.2+.85*clouds)*(.45+.55*glow)*(.4+.6*side)+halo*.14*(.5+.5*glow);
+ float rift=fbm(q*vec2(4.,10.)+vec2(0.,fbm(q*2.5)*1.6));
+ float lane=smoothstep(.52,.72,rift)*exp(-pow((q.y-off+.015)/(w*.42),2.));
+ l*=1.-lane*.8*(.35+.65*glow);
+ l+=.12*smoothstep(.6,.88,fbm(p*2.+vec2(T*.002,5.)))*(.3+.7*glow)*(1.-core*.5);
+ float kn=smoothstep(.78,.95,fbm(q*16.+3.))*core;
+ l+=kn*.5*(1.-lane);
+ float hs=h(cell);
+ float dens=mix(.993,.955,core*(.4+.6*clouds)*(1.-lane*.7));
+ l=max(l,step(dens,hs)*(.35+.4*core));
+ ink=step(.9972,hs)*(.65+.35*sin(T*.16+hs*50.));
+ return l;
+}
+
+// ---------- Cloudsea: peaks above a slow sea of cloud ----------
+float peakH(float x){
+ float h0=max(.36/(1.+pow(abs(x+.62)*4.,1.4)),max(.3/(1.+pow(abs(x-.66)*4.5,1.4)),.13/(1.+pow(abs(x-.05)*6.,1.4))));
+ float rough=fbm(vec2(x*9.,1.))*.05+fbm(vec2(x*30.,2.))*.012;
+ return h0+rough*smoothstep(.02,.15,h0);
+}
+float cloudsea(vec2 p,vec2 cell,out float ink){
+ float dawn=smoothstep(0.,1.,P);
+ float CL=-.08;
+ float l=.03+(.12+.32*dawn)*exp(-max(p.y-CL,0.)*4.)*(.55+.45*exp(-abs(p.x+.45)*1.5));
+ float hs=h(cell);
+ ink=step(.9968,hs)*smoothstep(.05,.3,p.y)*(1.-dawn*.7)*(.75+.25*sin(T*.2+hs*40.));
+ l=max(l,step(.988,hs)*.25*smoothstep(.1,.35,p.y)*(1.-dawn*.6));
+ float H=CL-.02+peakH(p.x);
+ if(p.y<H){
+  float e=.003;float sl=(peakH(p.x+e)-peakH(p.x-e))/(2.*e);
+  float lit=clamp(.3+sl*.7,0.,1.);
+  float d=H-p.y;
+  float grain=.7+.3*fbm(p*vec2(10.,26.));
+  l=.012+.025*fbm(p*25.)+lit*grain*(.2+.55*dawn)*exp(-d*3.5);
+  l+=.07*step(.62,fract(d*110.+p.x*8.+fbm(p*14.)*2.))*lit;
+  l+=smoothstep(.006,0.,d)*(.22+.4*dawn*lit);
+  ink=0.;
+ }
+ float top=CL+.018*fbm(vec2(p.x*5.+T*.008,T*.01))+.01*sin(p.x*3.+T*.05);
+ if(p.y<top){
+  float dep=top-p.y;float z=1./(dep+.02);
+  vec2 cq=vec2(p.x*z*.12,z*.09-T*.012);
+  float b=fbm(cq*1.4);
+  float b2=fbm(cq*3.1+b);
+  float puff=smoothstep(.3,.7,b2);
+  float rim=clamp((b-fbm(cq*1.4+vec2(.06)))*7.,0.,1.);
+  float side=smoothstep(.05,.75,abs(p.x)/(R.x/R.y*.5));
+  l=(.24+.62*puff*(.55+.45*dawn)*(.55+.45*side)+.25*rim*(.3+.7*dawn))*(.8+.2*exp(-dep*2.5));
+  ink=0.;
+ }
+ float a=p.y-top;
+ if(a>0.&&a<.06)l+=.1*exp(-a*40.)*smoothstep(.45,.75,fbm(vec2(p.x*4.+T*.01,a*25.+T*.01)));
+ return l;
+}
+void main(){
+ vec2 css=R/DPR;
+ vec2 px=vec2(gl_FragCoord.x,R.y-gl_FragCoord.y)/DPR;
+ vec2 cell=floor(px/STEP);
+ vec2 cc=(cell+.5)*STEP;
+ vec2 p=vec2(cc.x-css.x*.5,css.y*.5-cc.y)/css.y;
+ float K=css.y/STEP;
+ float ink=0.,l;
+ if(SCENE<.5)l=veil(p,cell,K,ink);
+ else if(SCENE<1.5)l=cloudsea(p,cell,ink);
+ else l=galaxy(p,cell,ink);
+ l=clamp(l,0.,1.);
+ float on=step(b4(cell)*.94+.03,l);
+ float r=mix(.62,1.3,l)*STEP/3.;
+ float d=length(px-cc);
+ float a=on*smoothstep(r+.35,r-.35,d)*(.3+.6*l);
+ vec3 col=mix(MUTED,INK,smoothstep(.5,.92,l));
+ vec3 pa=vec3(.714,.831,.925),pb=vec3(.835,.761,.922),pc=vec3(.910,.784,.749),pd=vec3(.741,.875,.827);
+ float tt=fract(p.x*.3+abs(p.y+.15)*.9+T*.005)*4.;
+ vec3 pastel=tt<1.?mix(pa,pb,tt):tt<2.?mix(pb,pc,tt-1.):tt<3.?mix(pc,pd,tt-2.):mix(pd,pa,tt-3.);
+ col=mix(col,pastel*mix(.85,1.05,l),TINT*.75);
+ vec4 o=vec4(col*a,a);
+ if(ink>.02){float ri=mix(.75,1.25,smoothstep(.6,.8,ink))*STEP/3.;float ai=smoothstep(ri+.35,ri-.35,d)*clamp(ink,0.,1.)*.85;o=mix(o,vec4(INK*ai,ai),step(o.a,ai));}
+ gl_FragColor=o;
+}`;
+
+  const U = {};
+  if (gl) {
+    const shader = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s)); return s; };
+    const program = gl.createProgram();
+    gl.attachShader(program, shader(gl.VERTEX_SHADER, VS));
+    gl.attachShader(program, shader(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(program);
+    gl.useProgram(program);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(program, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ['R', 'DPR', 'T', 'P', 'STEP', 'TINT', 'SCENE', 'MUTED', 'INK'].forEach(k => U[k] = gl.getUniformLocation(program, k));
+  }
+
+  function rgb(value, fallback) {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const x = c.getContext('2d'); x.fillStyle = fallback; x.fillStyle = value || fallback; x.fillRect(0, 0, 1, 1);
+    const d = x.getImageData(0, 0, 1, 1).data; return [d[0] / 255, d[1] / 255, d[2] / 255];
+  }
+
+  function draw() {
+    if (!gl) return;
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform2f(U.R, canvas.width, canvas.height);
+    gl.uniform1f(U.DPR, Math.min(devicePixelRatio || 1, 2));
+    gl.uniform1f(U.T, T);
+    gl.uniform1f(U.P, P);
+    gl.uniform1f(U.STEP, 2.5);
+    gl.uniform1f(U.TINT, 0);
+    gl.uniform1f(U.SCENE, SCENE);
+    gl.uniform3fv(U.MUTED, colors.muted);
+    gl.uniform3fv(U.INK, colors.ink);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
   function label() {
     toggle.textContent = playing ? 'Ⅱ PAUSE BACKGROUND' : '▷ PLAY BACKGROUND';
     toggle.setAttribute('aria-label', playing ? 'Pause background motion' : 'Play background motion');
   }
-  function paint() {
-    ctx.clearRect(0, 0, width, height);
-    if (!width || !height) return;
-    // A 32-second visual story: signals gather, find a thread, weave, release.
-    // Cosine envelopes return to their starting state without a visible reset.
-    const cycle = phase * Math.PI * 2 / 32;
-    const gather = Math.pow((1 - Math.cos(cycle)) / 2, .8);
-    const weave = Math.pow((1 - Math.cos(cycle)) / 2, 3);
-    const step = 4;
-    const hash = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
-    const path = (x, offset = 0) => .46 + .34 * Math.sin(x * 6.4 + .25)
-      + .04 * Math.sin(x * 17 + Math.sin(cycle)) + offset;
-    for (let x = 2; x < width; x += step) {
-      const nx = x / width;
-      const center = path(nx);
-      const branch = .065 * weave * Math.sin(nx * 15 + Math.sin(cycle));
-      const breadth = .025 + .055 * (1 - gather);
-      for (let y = 2; y < height; y += step) {
-        const ny = y / height;
-        const distance = (ny - center - branch) / breadth;
-        const other = (ny - center + branch) / breadth;
-        const ribbon = Math.exp(-distance * distance);
-        const partner = Math.exp(-other * other) * weave;
-        const rib = .55 + .45 * Math.cos(distance * 14 + nx * 7);
-        const fragments = Math.pow(.5 + .5 * Math.sin(nx * 43 + Math.sin(cycle) * 2)
-          * Math.cos(ny * 37 - Math.sin(cycle)), 5) * .2;
-        const density = Math.min(.95, gather * (ribbon * (.28 + .6 * rib) + partner * .35)
-          + fragments * (1 - gather));
-        const threshold = (bayer[Math.floor(y / step) % 4][Math.floor(x / step) % 4] + .5) / 16;
-        if (density > threshold) {
-          ctx.fillStyle = muted;
-          ctx.globalAlpha = .24 + density * .42;
-          ctx.fillRect(x, y, density > .6 ? 1.8 : 1.2, density > .6 ? 1.8 : 1.2);
-        }
-      }
-    }
-    // Individual signals visibly converge on the same thread, then drift home.
-    ctx.fillStyle = ink;
-    for (let i = 0; i < 240; i++) {
-      const homeX = hash(i + 2), homeY = hash(i + 901);
-      const nx = homeX + Math.sin(cycle) * .015 * (1 - gather);
-      const target = path(nx, (hash(i + 21) - .5) * .035)
-        + (i % 2 ? 1 : -1) * .065 * weave * Math.sin(nx * 15 + Math.sin(cycle));
-      const y = homeY * (1 - gather) + target * gather;
-      ctx.globalAlpha = .08 + gather * .25 + hash(i + 17) * .09;
-      ctx.fillRect(nx * width, y * height, 1.3, 1.3);
-    }
-    ctx.globalAlpha = 1;
-  }
+
   function frame(time) {
     raf = 0;
-    if (!playing || document.hidden) return;
-    if (time - last >= 40) {
-      phase += Math.min((time - last) / 1000, .06) ;
+    if (document.hidden) return;
+    let settled = false;
+    if (time - last >= 33) {
+      const dt = Math.min((time - last) / 1000, .06);
       last = time;
-      paint();
+      if (playing) T += dt;
+      const target = targetPhase();
+      P += (target - P) * (preference.matches ? 1 : Math.min(1, dt * 1.6));
+      if (Math.abs(target - P) < .0005) { P = target; settled = true; }
+      draw();
     }
-    raf = requestAnimationFrame(frame);
+    if (playing || !settled) raf = requestAnimationFrame(frame);
   }
-  function sync() {
-    cancelAnimationFrame(raf);
-    raf = 0;
-    label();
-    if (playing && !document.hidden) {
-      last = performance.now();
-      raf = requestAnimationFrame(frame);
-    }
-  }
+  function kick() { if (!raf && !document.hidden) { last = performance.now() - 34; raf = requestAnimationFrame(frame); } }
+  function sync() { label(); kick(); }
+
   function resize() {
-    width = host.clientWidth;
-    height = host.clientHeight;
     const dpr = Math.min(devicePixelRatio || 1, 2);
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    canvas.width = Math.round(host.clientWidth * dpr);
+    canvas.height = Math.round(host.clientHeight * dpr);
+    if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
     const palette = getComputedStyle(document.documentElement);
-    ink = palette.getPropertyValue('--ink').trim();
-    muted = palette.getPropertyValue('--muted').trim();
-    paint();
+    colors = { muted: rgb(palette.getPropertyValue('--muted').trim(), '#929a9d'), ink: rgb(palette.getPropertyValue('--ink').trim(), '#e9e9e6') };
+    draw();
   }
+
   toggle.addEventListener('click', () => { playing = !playing; sync(); });
-  preference.addEventListener('change', event => { playing = !event.matches; sync(); paint(); });
+  preference.addEventListener('change', event => { playing = !event.matches; sync(); });
   document.addEventListener('visibilitychange', sync);
+  scroller?.addEventListener('scroll', kick, { passive: true });
+  if (sheet) new MutationObserver(kick).observe(sheet, { attributes: true, attributeFilter: ['data-page'] });
   document.addEventListener('pointermove', event => {
-    pointer.x = event.clientX / width;
-    pointer.y = event.clientY / height;
     dividers.forEach(divider => {
       const rect = divider.getBoundingClientRect();
       const edgeY = divider.matches('footer') ? rect.top - 1 : rect.bottom - 1;
       divider.style.setProperty('--divider-x', (event.clientX - rect.left) + 'px');
       divider.style.setProperty('--divider-y', (event.clientY - edgeY) + 'px');
     });
-    updateEdge(event.clientX, event.clientY);
+    updateEdge(event.clientX);
   }, { passive: true });
-  document.documentElement.addEventListener('pointerleave', () => { pointer.x = -1; pointer.y = -1; dividers.forEach(divider => { divider.style.setProperty('--divider-x', '-999px'); divider.style.setProperty('--divider-y', '-999px'); }); });
+  document.documentElement.addEventListener('pointerleave', () => { dividers.forEach(divider => { divider.style.setProperty('--divider-x', '-999px'); divider.style.setProperty('--divider-y', '-999px'); }); });
   new ResizeObserver(resize).observe(host);
+  P = targetPhase();
   resize();
-  if (sheet) updateEdge(innerWidth * .65, 0);
+  if (sheet) updateEdge(innerWidth * .65);
   sync();
 })();
