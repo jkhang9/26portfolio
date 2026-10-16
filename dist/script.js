@@ -33,6 +33,33 @@ asteriskButton.addEventListener('pointerenter',event=>{if(event.pointerType!=='t
 asteriskButton.addEventListener('click',shuffleAsterisk);
 asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-visible'))shuffleAsterisk();});
 
+// The study's subject is re-filed on hover: letters dissolve into the background's marks, then resolve left to right into a random other subject.
+(()=>{
+ const el=$('study-subject'),marks=['·','•','+','✦','✳','⁕'];
+ const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
+ let index=0,timer,busy=false;
+ function refile(){
+  if(busy)return;busy=true;
+  const from=el.textContent;index=(index+1+Math.floor(Math.random()*(subjects.length-1)))%subjects.length;const to=subjects[index];
+  if(reducedMotion.matches){el.textContent=to;busy=false;return;}
+  const len=Math.max(from.length,to.length),start=performance.now();
+  timer=setInterval(()=>{
+   const frame=Math.floor((performance.now()-start)/40);let out='';
+   for(let i=0;i<len;i++){
+    const settle=4+i*1.4;
+    if(frame>=settle)out+=to[i]||'';
+    else if(frame<2&&from[i]&&from[i]!==' ')out+=from[i];
+    else out+=(to[i]===' '||(!to[i]&&frame>settle-2))?(to[i]||''):marks[(i+frame)%marks.length];
+   }
+   el.textContent=out;
+   if(frame>=4+len*1.4){el.textContent=to;clearInterval(timer);busy=false;}
+  },40);
+ }
+ el.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')refile();});
+ el.addEventListener('click',refile);
+ el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();refile();}});
+})();
+
 // Scroll indicator in the sheet's right margin (the native scrollbar is hidden so nothing covers content).
 // The thumb tracks the scroll position; drag it or click the rail to jump.
 (()=>{
