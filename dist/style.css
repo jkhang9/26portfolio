@@ -138,12 +138,15 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 .work-strip>li+li{padding-top:48px;border-top:1px solid var(--accent)}
 .work-summary{min-width:0;padding:16px 0}
 .work-project-name{margin:0;color:var(--muted)}
-.work-project-title{margin:18px 0 24px;font:400 clamp(28px,3vw,44px)/1.08 var(--serif);letter-spacing:-.015em;color:var(--ink)}
-.work-summary .work-desc{margin:0;max-width:36ch;font:var(--type-ui);line-height:1.6}
+.work-project-title{margin:12px 0 18px;font:var(--type-copy);color:var(--ink)}
+.work-summary .work-desc{margin:0;max-width:36ch;font:var(--type-body)}
 @media(max-width:720px){
  .work-strip{gap:32px}
  .work-strip>li{grid-template-columns:minmax(0,1fr);gap:20px}
  .work-strip>li+li{padding-top:32px}
  .work-summary{padding:0}
- .work-project-title{margin:12px 0 16px}
+ .work-project-title{margin:12px 0 18px}
 }
+
+/* Work thumbnails retain a consistent landscape format. */
+.work-thumb{aspect-ratio:4/3;height:auto;object-fit:cover}
