@@ -175,3 +175,12 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
  .work-strip .work-card .visit-badge{opacity:1;transform:none}
 }
 @media(prefers-reduced-motion:reduce){.work-strip .work-summary,.work-strip .work-title-group{transition:none}}
+
+/* Mobile contact footer frees the left margin for page content. */
+@media(max-width:720px){
+ .sheet{padding-left:20px;padding-right:20px;padding-bottom:82px}
+ .frame-scroll{border-bottom:1px solid var(--accent)}
+ .social-links{top:auto;bottom:30px;left:20px;right:20px;flex-direction:row;justify-content:center;gap:12px}
+ .social-links a{width:44px;height:44px}
+ .copyright-vertical{left:20px;right:20px;bottom:12px;writing-mode:horizontal-tb;transform:none;text-align:center;font-size:10px}
+}
