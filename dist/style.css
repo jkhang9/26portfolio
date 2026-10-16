@@ -184,3 +184,6 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
  .social-links a{width:44px;height:44px}
  .copyright-vertical{left:20px;right:20px;bottom:12px;writing-mode:horizontal-tb;transform:none;text-align:center;font-size:10px}
 }
+
+/* About is a placeholder for now: one centred line. */
+.about-page.under-construction{min-height:100%;background:none;box-shadow:none;border:0;display:flex;align-items:center;justify-content:center;padding:0}.about-page.under-construction[hidden]{display:none}.under-construction p{margin:0;font:var(--type-meta);color:var(--muted);text-align:center}
