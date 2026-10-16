@@ -134,17 +134,17 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 
 /* Each selected project pairs its image with an editorial title and description. */
 .work-strip{grid-template-columns:minmax(0,1fr);gap:48px}
-.work-strip>li{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
+.work-strip>li{display:block}
 .work-strip>li+li{padding-top:48px;border-top:1px solid var(--accent)}
-.work-summary{min-width:0;padding:16px 0}
+.work-summary{min-width:0;padding:28px 0 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
 .work-project-name{margin:0;color:var(--muted)}
 .work-project-title{margin:12px 0 18px;font:var(--type-copy);color:var(--ink)}
-.work-summary .work-desc{margin:0;max-width:36ch;font:var(--type-body)}
+.work-summary .work-desc{margin:0;font:var(--type-body)}
 @media(max-width:720px){
  .work-strip{gap:32px}
  .work-strip>li{grid-template-columns:minmax(0,1fr);gap:20px}
  .work-strip>li+li{padding-top:32px}
- .work-summary{padding:0}
+ .work-summary{padding:20px 0 0;grid-template-columns:minmax(0,1fr);gap:18px}
  .work-project-title{margin:12px 0 18px}
 }
 
