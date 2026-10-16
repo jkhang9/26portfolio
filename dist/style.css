@@ -28,7 +28,7 @@ b,em,i,strong{font-weight:inherit;font-style:normal}button,a{color:inherit;-webk
 .sheet::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--paper-texture);background-size:var(--paper-texture-size);background-attachment:fixed}
 .registration,.small-label,.index-tabs button span,.ribbon-origin>p,.ribbon-fold>span,.ribbon-tail>span,.ribbon-curiosity figcaption{font:var(--type-meta);letter-spacing:0;font-variant-numeric:tabular-nums}
 .registration{grid-row:1;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px 24px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--accent)}
-.location-meta,.edition{white-space:nowrap}.study-meta{text-align:center;text-wrap:balance}
+.location-meta,.edition{white-space:nowrap}.study-meta{text-align:center;text-wrap:balance}.study-subject{cursor:default;outline:none;white-space:nowrap}.study-subject:focus-visible{box-shadow:0 1px 0 var(--ink)}
 .frame-scroll{grid-row:2;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:none;padding:20px 0;outline-offset:-3px;-webkit-overflow-scrolling:touch}.frame-scroll:focus-visible{outline:1px solid var(--muted)}.empty-page{min-height:100%}
 /* Work: statement + roles, then a strip of tall case-study thumbnails. Playground: bento of stroked tiles. */
 .placeholder{display:flex;flex-direction:column;justify-content:space-between;padding:12px;color:var(--muted);background:var(--paper) repeating-linear-gradient(135deg,transparent 0 9px,var(--accent) 9px 10px);border:1px solid var(--accent);width:100%}
