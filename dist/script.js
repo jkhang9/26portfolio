@@ -33,27 +33,34 @@ asteriskButton.addEventListener('pointerenter',event=>{if(event.pointerType!=='t
 asteriskButton.addEventListener('click',shuffleAsterisk);
 asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-visible'))shuffleAsterisk();});
 
-// The study's subject is re-filed on hover: letters dissolve into the background's marks, then resolve left to right into a random other subject.
+// The study's subject is re-filed on hover, a little like a model thinking: the old words dissolve letter by letter
+// into the background's marks, a shimmer sweeps across while letters guess, and each one settles in its own random order.
 (()=>{
- const el=$('study-subject'),marks=['·','•','+','✦','✳','⁕'];
+ const el=$('study-subject'),marks=['·','•','+','✦','✳','⁕'],guesses='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
  const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
+ const pick=list=>list[Math.floor(Math.random()*list.length)];
  let index=0,timer,busy=false;
  function refile(){
   if(busy)return;busy=true;
   const from=el.textContent;index=(index+1+Math.floor(Math.random()*(subjects.length-1)))%subjects.length;const to=subjects[index];
   if(reducedMotion.matches){el.textContent=to;busy=false;return;}
   const len=Math.max(from.length,to.length),start=performance.now();
+  // Each letter gets its own moment to let go of the old word and to settle on the new one.
+  const cells=Array.from({length:len},()=>({leave:Math.random()*260,settle:520+Math.random()*900,glyph:'',next:0}));
+  const end=Math.max(...cells.map(c=>c.settle));
   timer=setInterval(()=>{
-   const frame=Math.floor((performance.now()-start)/40);let out='';
-   for(let i=0;i<len;i++){
-    const settle=4+i*1.4;
-    if(frame>=settle)out+=to[i]||'';
-    else if(frame<2&&from[i]&&from[i]!==' ')out+=from[i];
-    else out+=(to[i]===' '||(!to[i]&&frame>settle-2))?(to[i]||''):marks[(i+frame)%marks.length];
-   }
-   el.textContent=out;
-   if(frame>=4+len*1.4){el.textContent=to;clearInterval(timer);busy=false;}
-  },40);
+   const t=performance.now()-start,sweep=(t/9)%(len+8)-4;let out='';
+   cells.forEach((c,i)=>{
+    const target=to[i]||'';
+    if(t>=c.settle){out+=target;return;}
+    if(t<c.leave&&from[i]&&from[i]!==' '){out+=from[i];return;}
+    if(target===' '||(!target&&t>c.settle-200)){out+=target;return;}
+    if(t>=c.next){c.glyph=t>c.settle-260&&Math.random()<.6?pick(guesses):pick(marks);c.next=t+50+Math.random()*90;}
+    out+=`<span class="${Math.abs(i-sweep)<2?'thinking lit':'thinking'}">${c.glyph}</span>`;
+   });
+   el.innerHTML=out;
+   if(t>=end){el.textContent=to;clearInterval(timer);busy=false;}
+  },30);
  }
  el.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')refile();});
  el.addEventListener('click',refile);
