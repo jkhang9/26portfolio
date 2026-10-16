@@ -133,20 +133,24 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 
 
 /* Each selected project pairs its image with an editorial title and description. */
-.work-strip{grid-template-columns:minmax(0,1fr);gap:48px}
+.work-strip{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(40px,4.5vw,72px);row-gap:80px}
 .work-strip>li{display:block}
-.work-strip>li+li{padding-top:48px;border-top:1px solid var(--accent)}
-.work-summary{min-width:0;padding:28px 0 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
+.work-strip>li+li{padding-top:0;border-top:0}
+.work-summary{min-width:0;padding:32px 0 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
 .work-project-name{margin:0;color:var(--muted)}
 .work-project-title{margin:12px 0 18px;font:var(--type-copy);color:var(--ink)}
 .work-summary .work-desc{margin:0;font:var(--type-body)}
 @media(max-width:720px){
  .work-strip{gap:32px}
  .work-strip>li{grid-template-columns:minmax(0,1fr);gap:20px}
- .work-strip>li+li{padding-top:32px}
+ .work-strip>li+li{padding-top:0}
  .work-summary{padding:20px 0 0;grid-template-columns:minmax(0,1fr);gap:18px}
  .work-project-title{margin:12px 0 18px}
 }
 
 /* Work thumbnails retain a consistent landscape format. */
 .work-thumb{aspect-ratio:4/3;height:auto;object-fit:cover}
+
+/* Keep the two-column project gallery airy, then stack before captions become cramped. */
+@media(min-width:721px) and (max-width:1000px){.work-strip{grid-template-columns:minmax(0,1fr);row-gap:64px}}
+@media(max-width:720px){.work-strip{grid-template-columns:minmax(0,1fr);row-gap:48px}}
