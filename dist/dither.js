@@ -1,14 +1,14 @@
 (() => {
   'use strict';
   // Quiet Skies: one of three dithered scenes (Veil, Cloudsea, Galaxy), chosen at random on each load.
-  // Each scene plays as a seamless 5-second loop. Phone-size screens and reduced-motion
+  // Each scene plays as a seamless 10-second loop. Phone-size screens and reduced-motion
   // settings get a single still frame instead.
   const host = document.querySelector('.dither-bg');
   const canvas = host?.querySelector('canvas');
   if (!canvas) return;
   const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true });
   const SCENE = Math.floor(Math.random() * 3);
-  const LOOP = 5;          // seconds per loop
+  const LOOP = 10;         // seconds per loop
   const STORY = .8;        // fixed scene state
   const still = matchMedia('(max-width: 700px), (prefers-reduced-motion: reduce)');
   let raf = 0, start = performance.now(), colors = { muted: [.57, .6, .62], ink: [.91, .91, .9] };
@@ -251,7 +251,7 @@ void main(){
   // Scene time follows one smooth cycle every LOOP seconds, so the last frame meets the first.
   function sceneTime(now) {
     const phase = ((now - start) / 1000 / LOOP) * Math.PI * 2;
-    return 40 + 1.6 * Math.sin(phase);
+    return 40 + 7 * Math.sin(phase);
   }
 
   function draw(T) {
