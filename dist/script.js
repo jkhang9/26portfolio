@@ -36,7 +36,7 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
 // The study's subject is re-filed on hover: letters dissolve into the background's marks, then resolve left to right.
 (()=>{
  const el=$('study-subject'),marks=['·','•','+','✦','✳','⁕'];
- const subjects=['EVERYDAY THINGS','MORNING LIGHT','FOLDED RECEIPTS','LOOSE THREADS','KITCHEN NOISE','LAST BUSES','SPARE KEYS','CORNER STORES'];
+ const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
  let index=0,timer,busy=false;
  function refile(){
   if(busy)return;busy=true;
