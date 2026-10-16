@@ -184,3 +184,13 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
  .social-links a{width:44px;height:44px}
  .copyright-vertical{left:20px;right:20px;bottom:12px;writing-mode:horizontal-tb;transform:none;text-align:center;font-size:10px}
 }
+
+/* Contact links follow the content on mobile; desktop keeps the side rail. */
+.contact-footer{display:contents}
+@media(max-width:720px){
+ .sheet{padding-bottom:0}
+ .frame-scroll{border-bottom:0}
+ .contact-footer{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:40px;padding:16px 0 12px;border-top:1px solid var(--accent)}
+ .contact-footer .social-links{position:static;flex-direction:row;justify-content:center;gap:12px}
+ .contact-footer .copyright-vertical{position:static;writing-mode:horizontal-tb;transform:none;white-space:normal;text-align:center;font-size:10px}
+}
