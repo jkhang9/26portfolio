@@ -29,3 +29,8 @@
 /* Scrollbar color appears only while hovering or dragging. */
 .scroll-rail:hover .scroll-thumb,.scroll-rail.dragging .scroll-thumb,.scroll-rail:active .scroll-thumb{background:linear-gradient(180deg,var(--interaction-blue),var(--interaction-lilac) 36%,var(--interaction-peach) 66%,var(--interaction-mint))}
 .scroll-rail:hover .scroll-thumb,.scroll-rail.dragging .scroll-thumb,.scroll-rail:active .scroll-thumb{width:5px;left:5px}
+
+/* Keep the tabs easy to find: a soft clearing in the background behind the tab row, and denser inactive tabs. */
+.index-tabs::before{content:'';position:absolute;left:-56px;right:-56px;top:-34px;bottom:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 60% 100% at 50% 100%,var(--surround) 45%,color-mix(in srgb,var(--surround) 70%,transparent) 68%,transparent 100%)}
+.index-tabs button:not(.active){background:#14171ae6}
+.index-tabs button:hover:not(.active){background:#282e31}
