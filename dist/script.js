@@ -120,11 +120,11 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
 
 /* Each new text selection shifts through the site's restrained iridescent palette. */
 (()=>{
- const palette=['blue','lilac','mint'];
+ const palette=['var(--interaction-blue)','var(--interaction-lilac)','var(--interaction-mint)','var(--interaction-peach)','#e3b9ce','#bcc6ed'];
  let index=-1;
  const shiftTint=()=>{
   index=(index+1)%palette.length;
-  document.documentElement.style.setProperty('--selection-tint','color-mix(in srgb,var(--interaction-'+palette[index]+') 27%,transparent)');
+  document.documentElement.style.setProperty('--selection-tint','color-mix(in srgb,'+palette[index]+' 27%,transparent)');
  };
  document.addEventListener('pointerdown',event=>{
   if(event.button!==0||!(event.target instanceof Element))return;
