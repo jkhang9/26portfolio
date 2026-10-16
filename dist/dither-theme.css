@@ -13,8 +13,8 @@
 .index-tabs button:hover:not(.active){background:#282e31}
 .social-links a:hover,.social-links a:focus-visible{color:var(--ink)}
 .social-links a:hover svg,.social-links a:focus-visible svg{fill:var(--icon-iridescence)}
-.co-link:hover,.co-link:focus-visible{color:var(--ink);background-image:linear-gradient(var(--iris-angle,115deg),var(--interaction-blue),var(--interaction-lilac) 36%,var(--interaction-peach) 66%,var(--interaction-mint)),radial-gradient(circle,var(--muted) .75px,transparent .85px)}
-.co-link:hover::after,.co-link:focus-visible::after{background:linear-gradient(var(--iris-angle,115deg),var(--interaction-blue),var(--interaction-lilac),var(--interaction-mint))}
+:is(.co-link,.work-project-link,#explore-playground):hover,:is(.co-link,.work-project-link,#explore-playground):focus-visible{color:var(--ink);background-image:linear-gradient(var(--iris-angle,115deg),var(--interaction-blue),var(--interaction-lilac) 36%,var(--interaction-peach) 66%,var(--interaction-mint)),radial-gradient(circle,var(--muted) .75px,transparent .85px)}
+:is(.co-link,.work-project-link,#explore-playground):hover::after,:is(.co-link,.work-project-link,#explore-playground):focus-visible::after{background:linear-gradient(var(--iris-angle,115deg),var(--interaction-blue),var(--interaction-lilac),var(--interaction-mint))}
 .footer-asterisk:hover span,.footer-asterisk:focus-visible span,.footer-asterisk:active span{background:linear-gradient(var(--iris-angle,115deg),var(--interaction-blue),var(--interaction-lilac),var(--interaction-peach),var(--interaction-mint));background-clip:text;-webkit-background-clip:text;color:transparent}
 .registration,.sheet>footer{position:relative}
 .registration::after,.sheet>footer::before{content:'';position:absolute;left:0;right:0;height:1px;pointer-events:none;background:linear-gradient(100deg,#b6d4ec44,#d5c2eb44,#e8c8bf33,#bddfd333);-webkit-mask-image:radial-gradient(75px circle at var(--divider-x,-999px) var(--divider-y,-999px),#000,transparent);mask-image:radial-gradient(75px circle at var(--divider-x,-999px) var(--divider-y,-999px),#000,transparent)}

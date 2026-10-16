@@ -103,7 +103,7 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   link.addEventListener('pointerenter',refresh);
   link.addEventListener('focus',refresh);
  });
- document.querySelectorAll('.co-link,.footer-asterisk').forEach(element=>{
+ document.querySelectorAll('.co-link,.work-project-link,#explore-playground,.footer-asterisk').forEach(element=>{
   const refresh=()=>element.style.setProperty('--iris-angle',(80+Math.floor(Math.random()*100))+'deg');
   element.addEventListener('pointerenter',refresh);
   element.addEventListener('focus',refresh);

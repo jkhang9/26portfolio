@@ -44,17 +44,17 @@ b,em,i,strong{font-weight:inherit;font-style:normal}button,a{color:inherit;-webk
 .work-roles dd{margin:12px 0 0;font:var(--type-ui);color:var(--ink)}.work-roles dd+dd{margin-top:16px}
 /* Company links: dotted muted rule (same colour as the arrow) at rest; on hover/focus a solid ink rule draws in from the left
    over it and the small ↗ (same as the VISIT SITE badge) nudges up-right inside the link's own right padding, so it is never clipped. */
-.co-link{color:var(--ink);text-decoration:none;text-transform:uppercase;font:var(--type-meta);white-space:nowrap;padding-bottom:3px;padding-right:3px;
+:is(.co-link,.work-project-link,#explore-playground){border:0;background-color:transparent;color:var(--ink);text-decoration:none;text-transform:uppercase;font:var(--type-meta);white-space:nowrap;padding-bottom:3px;padding-right:3px;
  background:linear-gradient(var(--ink),var(--ink)) left bottom/0 1px no-repeat,radial-gradient(circle,var(--muted) .75px,transparent .85px) left bottom/4px 1px repeat-x;
  transition:background-size .32s cubic-bezier(.2,.7,.2,1)}
-.co-link::after{content:'';display:inline-block;width:7px;height:7px;margin-left:5px;vertical-align:.1em;background:var(--muted);
+:is(.co-link,.work-project-link,#explore-playground)::after{content:'';display:inline-block;width:7px;height:7px;margin-left:5px;vertical-align:.1em;background:var(--muted);
  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1.5 6.5l5-5M2.5 1.5h4v4' fill='none' stroke='black' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1.5 6.5l5-5M2.5 1.5h4v4' fill='none' stroke='black' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
  transition:transform .32s cubic-bezier(.2,.7,.2,1),background-color .2s}
-.co-link:hover,.co-link:focus-visible{background-size:100% 1px,4px 1px}
-.co-link:hover::after,.co-link:focus-visible::after{transform:translate(2px,-2px);background:var(--ink)}
-.co-link:focus-visible{outline:1px solid var(--muted);outline-offset:3px}
-@media(prefers-reduced-motion:reduce){.co-link,.co-link::after{transition:none}}
+:is(.co-link,.work-project-link,#explore-playground):hover,:is(.co-link,.work-project-link,#explore-playground):focus-visible{background-size:100% 1px,4px 1px}
+:is(.co-link,.work-project-link,#explore-playground):hover::after,:is(.co-link,.work-project-link,#explore-playground):focus-visible::after{transform:translate(2px,-2px);background:var(--ink)}
+:is(.co-link,.work-project-link,#explore-playground):focus-visible{outline:1px solid var(--muted);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){:is(.co-link,.work-project-link,#explore-playground),:is(.co-link,.work-project-link,#explore-playground)::after{transition:none}}
 .work-heading{margin:0 0 14px;color:var(--muted)}
 .work-strip{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px}
 .work-card{position:relative;display:block;color:inherit;text-decoration:none}
@@ -157,7 +157,6 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 
 /* Project captions follow the About page's vertical text hierarchy. */
 .work-summary .work-project-title{margin:20px 0 24px}
-.work-project-link{display:inline-flex;align-items:center;gap:28px;margin-top:28px;padding-bottom:7px;border-bottom:1px solid var(--accent);font:var(--type-ui);text-decoration:none;color:var(--ink)}
-.work-project-link span{display:inline-block;transition:transform .25s}
-.work-project-link:hover span{transform:rotate(90deg)}
+.work-project-link{display:inline-block;margin-top:28px}
+
 @media(max-width:720px){.work-summary .work-project-title{margin:16px 0 20px}}
