@@ -1,25 +1,22 @@
 (() => {
   'use strict';
   // Quiet Skies: one of three dithered scenes (Veil, Cloudsea, Galaxy), chosen at random on each load.
-  // Scrolling the sheet moves the scene's story forward: Work starts it, Playground deepens it, About me completes it.
-  // Pause stops ambient motion only.
+  // Each scene plays as a seamless 5-second loop. Phone-size screens and reduced-motion
+  // settings get a single still frame instead.
   const host = document.querySelector('.dither-bg');
   const canvas = host?.querySelector('canvas');
   if (!canvas) return;
   const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true });
-  const preference = matchMedia('(prefers-reduced-motion: reduce)');
-  const toggle = document.createElement('button');
-  toggle.className = 'background-motion';
-  toggle.type = 'button';
-  document.body.append(toggle);
   const SCENE = Math.floor(Math.random() * 3);
-  let playing = !preference.matches, raf = 0, last = 0, T = 20 + Math.random() * 60, P = 0;
-  let colors = { muted: [.57, .6, .62], ink: [.91, .91, .9] };
+  const LOOP = 5;          // seconds per loop
+  const STORY = .8;        // fixed scene state
+  const still = matchMedia('(max-width: 700px), (prefers-reduced-motion: reduce)');
+  let raf = 0, start = performance.now(), colors = { muted: [.57, .6, .62], ink: [.91, .91, .9] };
   const sheet = document.querySelector('.sheet');
-  const scroller = document.getElementById('frame-scroll');
   const dividers = [...document.querySelectorAll('.registration,.sheet>footer')];
 
   // Top-edge highlight (unchanged from the original).
+  const motionless = matchMedia('(prefers-reduced-motion: reduce)');
   let edgePosition = null, edgeTarget = 0, edgeRAF = 0, edgeLast = 0;
   function drawEdge() { sheet.style.setProperty('--edge-x', edgePosition + 'px'); }
   function travelEdge(time) {
@@ -35,26 +32,13 @@
     if (!sheet) return;
     const bounds = sheet.getBoundingClientRect();
     edgeTarget = Math.max(0, Math.min(bounds.width, clientX - bounds.left));
-    if (edgePosition === null || preference.matches) {
+    if (edgePosition === null || motionless.matches) {
       cancelAnimationFrame(edgeRAF); edgeRAF = 0;
       edgePosition = edgeTarget; drawEdge();
     } else if (!edgeRAF) {
       edgeLast = performance.now();
       edgeRAF = requestAnimationFrame(travelEdge);
     }
-  }
-
-  // Story position per sheet: [start, length] on a 0..1 scale.
-  const spans = [[.35, .25], [.6, .2], [.8, .2]];
-  function targetPhase() {
-    const page = Number(sheet?.dataset.page || 0);
-    const [start, len] = spans[page] || spans[0];
-    let s = 1;
-    if (scroller) {
-      const max = scroller.scrollHeight - scroller.clientHeight;
-      s = max > 2 ? scroller.scrollTop / max : 1;
-    }
-    return start + len * Math.min(1, Math.max(0, s));
   }
 
   const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
@@ -264,13 +248,19 @@ void main(){
     const d = x.getImageData(0, 0, 1, 1).data; return [d[0] / 255, d[1] / 255, d[2] / 255];
   }
 
-  function draw() {
+  // Scene time follows one smooth cycle every LOOP seconds, so the last frame meets the first.
+  function sceneTime(now) {
+    const phase = ((now - start) / 1000 / LOOP) * Math.PI * 2;
+    return 40 + 1.6 * Math.sin(phase);
+  }
+
+  function draw(T) {
     if (!gl) return;
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform2f(U.R, canvas.width, canvas.height);
     gl.uniform1f(U.DPR, Math.min(devicePixelRatio || 1, 2));
     gl.uniform1f(U.T, T);
-    gl.uniform1f(U.P, P);
+    gl.uniform1f(U.P, STORY);
     gl.uniform1f(U.STEP, 2.5);
     gl.uniform1f(U.TINT, 0);
     gl.uniform1f(U.SCENE, SCENE);
@@ -279,28 +269,18 @@ void main(){
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
-  function label() {
-    toggle.textContent = playing ? 'Ⅱ PAUSE BACKGROUND' : '▷ PLAY BACKGROUND';
-    toggle.setAttribute('aria-label', playing ? 'Pause background motion' : 'Play background motion');
-  }
-
-  function frame(time) {
+  let last = 0;
+  function frame(now) {
     raf = 0;
-    if (document.hidden) return;
-    let settled = false;
-    if (time - last >= 33) {
-      const dt = Math.min((time - last) / 1000, .06);
-      last = time;
-      if (playing) T += dt;
-      const target = targetPhase();
-      P += (target - P) * (preference.matches ? 1 : Math.min(1, dt * 1.6));
-      if (Math.abs(target - P) < .0005) { P = target; settled = true; }
-      draw();
-    }
-    if (playing || !settled) raf = requestAnimationFrame(frame);
+    if (document.hidden || still.matches) return;
+    if (now - last >= 33) { last = now; draw(sceneTime(now)); }
+    raf = requestAnimationFrame(frame);
   }
-  function kick() { if (!raf && !document.hidden) { last = performance.now() - 34; raf = requestAnimationFrame(frame); } }
-  function sync() { label(); kick(); }
+  function sync() {
+    cancelAnimationFrame(raf); raf = 0;
+    if (still.matches) { draw(40); return; }
+    if (!document.hidden) raf = requestAnimationFrame(frame);
+  }
 
   function resize() {
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -309,14 +289,11 @@ void main(){
     if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
     const palette = getComputedStyle(document.documentElement);
     colors = { muted: rgb(palette.getPropertyValue('--muted').trim(), '#929a9d'), ink: rgb(palette.getPropertyValue('--ink').trim(), '#e9e9e6') };
-    draw();
+    draw(still.matches ? 40 : sceneTime(performance.now()));
   }
 
-  toggle.addEventListener('click', () => { playing = !playing; sync(); });
-  preference.addEventListener('change', event => { playing = !event.matches; sync(); });
+  still.addEventListener('change', sync);
   document.addEventListener('visibilitychange', sync);
-  scroller?.addEventListener('scroll', kick, { passive: true });
-  if (sheet) new MutationObserver(kick).observe(sheet, { attributes: true, attributeFilter: ['data-page'] });
   document.addEventListener('pointermove', event => {
     dividers.forEach(divider => {
       const rect = divider.getBoundingClientRect();
@@ -328,7 +305,6 @@ void main(){
   }, { passive: true });
   document.documentElement.addEventListener('pointerleave', () => { dividers.forEach(divider => { divider.style.setProperty('--divider-x', '-999px'); divider.style.setProperty('--divider-y', '-999px'); }); });
   new ResizeObserver(resize).observe(host);
-  P = targetPhase();
   resize();
   if (sheet) updateEdge(innerWidth * .65);
   sync();

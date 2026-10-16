@@ -5,9 +5,6 @@
 .sheet::after{content:'';position:absolute;left:0;right:0;top:-2px;height:3px;pointer-events:none;z-index:4;background:linear-gradient(100deg,#b6d4ecb0,#d5c2eb99 38%,#e8c8bf88 65%,#bddfd388);-webkit-mask-image:radial-gradient(175px 12px at var(--edge-x,65%) center,#000 0%,#0009 35%,transparent 100%);mask-image:radial-gradient(175px 12px at var(--edge-x,65%) center,#000 0%,#0009 35%,transparent 100%);filter:blur(1px)}
 .dither-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .dither-bg canvas{display:block;width:100%;height:100%}
-.background-motion{position:fixed;left:var(--frame-gap);top:20px;z-index:3;padding:4px 0;border:0;background:none;color:var(--muted);font:var(--type-meta)}
-.background-motion:hover{color:var(--ink)}
-@media(max-height:420px){.background-motion{top:8px}}
 .index-tabs button{border-radius:0;background:#191d1f80;border-color:transparent;color:#aeb7ba;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .index-tabs button.active{background:#10121394;border-color:#ffffff12;color:var(--ink)}
 .index-tabs button:hover:not(.active){background:#282e31}
