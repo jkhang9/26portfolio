@@ -160,3 +160,18 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 .work-project-link{display:inline-block;margin-top:28px}
 
 @media(max-width:720px){.work-summary .work-project-title{margin:16px 0 20px}}
+
+/* Work titles appear on the image; the existing visit badge remains the sole call to action. */
+.work-strip .work-card{overflow:hidden}
+.work-strip .work-summary{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:72px 28px 28px;background:linear-gradient(180deg,transparent 10%,color-mix(in srgb,var(--paper) 65%,transparent) 48%,var(--paper) 100%);opacity:0;transition:opacity .28s ease;pointer-events:none}
+.work-strip .work-title-group{transform:translateY(6px);transition:transform .3s ease}
+.work-strip .work-project-title{margin:14px 0 0}
+.work-strip .work-card .visit-badge{z-index:2}
+.work-strip .work-card:is(:hover,:focus-visible) .work-summary{opacity:1}
+.work-strip .work-card:is(:hover,:focus-visible) .work-title-group{transform:none}
+@media(hover:none),(max-width:720px){
+ .work-strip .work-summary{position:static;padding:24px 0 0;background:none;opacity:1}
+ .work-strip .work-title-group{transform:none}
+ .work-strip .work-card .visit-badge{opacity:1;transform:none}
+}
+@media(prefers-reduced-motion:reduce){.work-strip .work-summary,.work-strip .work-title-group{transition:none}}
