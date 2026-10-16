@@ -13,7 +13,8 @@ const hash=n=>{const a=Math.sin(n*127.1+311.7)*43758.5453;return a-Math.floor(a)
 function wake(){until=performance.now()+1000;if(!raf)raf=requestAnimationFrame(frame)}
 function resize(){w=hero.clientWidth;h=hero.clientHeight;const d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0);if(fctx){fgCanvas.width=canvas.width;fgCanvas.height=canvas.height;fctx.setTransform(d,0,0,d,0,0)}cells=[];space=w<600?16:18;cols=Math.ceil((w-space/2)/space);rows=Math.ceil((h-space/2)/space);for(let y=space/2;y<h;y+=space)for(let x=space/2;x<w;x+=space){const id=cells.length;cells.push({x,y,e:0,dx:0,dy:0,ux:1,uy:0,wet:0,rim:1,seed:hash(id),decay:420+hash(id+17)*480})}brush.down=false;wake()}
 
-const ACCENT='#c1c7a5',MUTED='#777965',REST_ALPHA=.5;
+const palette=getComputedStyle(document.documentElement);
+const ACCENT=palette.getPropertyValue('--ink').trim(),MUTED=palette.getPropertyValue('--muted').trim(),REST_ALPHA=.5;
 function ink(x,y,energy){return energy>.6?ACCENT:MUTED}
 // The stroke core is accent; its outer rim and drying tail fall back to muted.
 function paint(c){return c.rim<.5&&c.e>.6?ACCENT:MUTED}
@@ -56,7 +57,7 @@ function sparkle(g,b,now){
  const age=now-b.t;
  for(const p of b.pts){
   const lv=sparkLevel(age-p.d);if(lv==null||lv<.02)continue;
-  g.save();g.translate(b.x+p.x,b.y+p.y);
+  g.save();g.fillStyle=g.strokeStyle=p.color||b.color||ACCENT;g.translate(b.x+p.x,b.y+p.y);
   if(lv>=PEAK_AT){
    const k=.8+.2*(lv-PEAK_AT)/(1-PEAK_AT);
    g.textAlign='center';g.textBaseline='middle';g.font=`400 ${(p.s*k).toFixed(1)}px ${SPARK_FONT}`;g.fillText(p.peak+VS,0,0);
@@ -73,14 +74,18 @@ const LAYOUTS=[
  [[-1,0],[0,-1],[1,-1]]      // large left, medium above, small upper-right
 ];
 const BOLD=['✱','✲','✽','✻','✼','✣','✤','✥','✶','✷','✸','*'],LIGHT=['✦','✧','⁕','✳','✵'];
-let lastLayout=-1;
+let lastLayout=-1,sparkColorIndex=0;
+const sparkColors=['--interaction-blue','--interaction-lilac','--interaction-peach','--interaction-mint'].map(name=>palette.getPropertyValue(name).trim()||ACCENT);
 function poke(x,y){
  const col=Math.round((x-space/2)/space),row=Math.round((y-space/2)/space);
  let k=Math.floor(Math.random()*(LAYOUTS.length-1));if(k>=lastLayout)k++;lastLayout=k;   // never the same twice in a row
  const pick=(arr)=>arr[Math.floor(Math.random()*arr.length)];
  const mk=([dc,dr],d,s,set)=>({x:space/2+(col+dc)*space-x,y:space/2+(row+dr)*space-y,d,s,peak:pick(set),seed:Math.random()*Math.PI});
  const [big,mid,small]=LAYOUTS[k];
- bursts.push({x,y,t:performance.now(),pts:[mk(big,0,16,BOLD),mk(mid,50,12,FINALS),mk(small,100,8,LIGHT)]});
+ const startColor=sparkColorIndex++%sparkColors.length;
+ const pts=[mk(big,0,16,BOLD),mk(mid,50,12,FINALS),mk(small,100,8,LIGHT)];
+ pts.forEach((point,index)=>{point.color=sparkColors[(startColor+index)%sparkColors.length];});
+ bursts.push({x,y,t:performance.now(),pts});
  if(!raf)raf=requestAnimationFrame(frame);wake();
 }
 // One dab of the brush: a soft core with faint bristle streaks. It only sets how wet each
@@ -122,7 +127,7 @@ function stroke(dt,now){
 // drawn again on a canvas above it in the surround green at full opacity (the inverse of the light-on-green
 // background). Resting dots are not mirrored, so the paper stays clean until it is touched.
 const fgCanvas=document.querySelector('.ascii-fg canvas'),fctx=fgCanvas&&fgCanvas.getContext('2d');
-const SURROUND='#565c3a';
+const SURROUND=palette.getPropertyValue('--ink').trim();
 function frame(now){raf=0;const dt=Math.min(now-(last||now-16),40);last=now;ctx.clearRect(0,0,w,h);let unsettled=stroke(dt,now);
 if(fctx){fctx.clearRect(0,0,w,h);const r=sheet.getBoundingClientRect();fctx.save();fctx.beginPath();fctx.rect(r.left,r.top,r.width,r.height);fctx.clip();fctx.fillStyle=fctx.strokeStyle=SURROUND}
 bursts=bursts.filter(b=>now-b.t<SPARK_LIFE);
@@ -149,7 +154,7 @@ for(let i=0;i<cells.length;i++){
   // Copy the cell onto the sheet layer, then put its transform back so later drawing (sparkles) isn't offset.
   if(fctx){fctx.save();fctx.setTransform(ctx.getTransform());mark(level,c.seed*Math.PI,fctx);fctx.restore()}
   ctx.restore();
- }else{ctx.beginPath();ctx.arc(c.x+c.dx,c.y+c.dy,.72,0,Math.PI*2);ctx.fill()}
+ } // Inactive cells stay clear; the dither layer supplies the background texture.
  ctx.globalAlpha=1;
 }
 // Sparkles sit on top of the dots: accent on the surround, surround green on the sheet.

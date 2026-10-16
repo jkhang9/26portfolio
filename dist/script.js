@@ -18,6 +18,7 @@ function shuffleAsterisk(){
  const start=asteriskIndex;
  asteriskIndex=(asteriskIndex+1)%asteriskForms.length;
  const target=asteriskIndex;
+
  const show=i=>{asteriskGlyph.textContent=asteriskForms[i]+'\uFE0E';};
  if(reducedMotion.matches){show(target);return;}
  let frame=0;
@@ -56,3 +57,28 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  addEventListener('hashchange',()=>requestAnimationFrame(update));addEventListener('load',update);update();
 })();
 
+
+// Each impression shifts the same restrained iridescent palette.
+(() => {
+ const colors=['#b6d4ec','#d5c2eb','#e8c8bf','#bddfd3'];
+ const ns='http://www.w3.org/2000/svg';
+ document.querySelectorAll('.social-links a').forEach((link,index)=>{
+  const svg=link.querySelector('svg'); if(!svg)return;
+  const defs=document.createElementNS(ns,'defs');
+  const gradient=document.createElementNS(ns,'linearGradient');
+  gradient.id='social-iridescence-'+index;
+  gradient.setAttribute('x1','0');gradient.setAttribute('y1','0');
+  gradient.setAttribute('x2','1');gradient.setAttribute('y2','1');
+  colors.forEach((color,i)=>{const stop=document.createElementNS(ns,'stop');stop.setAttribute('offset',i/(colors.length-1));stop.setAttribute('stop-color',color);gradient.append(stop);});
+  defs.append(gradient);svg.prepend(defs);
+  link.style.setProperty('--icon-iridescence','url(#'+gradient.id+')');
+  const refresh=()=>gradient.setAttribute('gradientTransform','rotate('+Math.floor(Math.random()*180)+' .5 .5)');
+  link.addEventListener('pointerenter',refresh);
+  link.addEventListener('focus',refresh);
+ });
+ document.querySelectorAll('.co-link,.footer-asterisk').forEach(element=>{
+  const refresh=()=>element.style.setProperty('--iris-angle',(80+Math.floor(Math.random()*100))+'deg');
+  element.addEventListener('pointerenter',refresh);
+  element.addEventListener('focus',refresh);
+ });
+})();
