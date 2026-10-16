@@ -196,3 +196,12 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
  .contact-footer .social-links{position:static;flex-direction:row;justify-content:center;gap:12px}
  .contact-footer .copyright-vertical{position:static;writing-mode:horizontal-tb;transform:none;white-space:normal;text-align:center;font-size:10px}
 }
+
+/* One fixed mobile footer row, outside the scrollable content. */
+@media(max-width:720px){
+ .sheet{padding-bottom:60px}
+ .contact-footer{position:absolute;left:20px;right:20px;bottom:0;height:60px;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:0;border-top:1px solid var(--accent);background:var(--paper);z-index:4}
+ .contact-footer .social-links{flex:0 0 auto;gap:0}
+ .contact-footer .social-links a{width:32px;height:44px}
+ .contact-footer .copyright-vertical{flex:0 0 auto;white-space:nowrap;font-size:9px;text-align:right}
+}

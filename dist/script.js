@@ -117,17 +117,3 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  });
 })();
 
-/* Move the same contact elements into the scrolling page on phones. */
-(()=>{
- const contact=document.getElementById('contact-footer');
- const scroll=document.getElementById('frame-scroll');
- const sheet=document.querySelector('.sheet');
- const registration=document.querySelector('.registration');
- const mobile=window.matchMedia('(max-width:720px)');
- const placeContact=()=>{
-  if(mobile.matches)scroll.append(contact);
-  else sheet.insertBefore(contact,registration);
- };
- placeContact();
- mobile.addEventListener('change',placeContact);
-})();
