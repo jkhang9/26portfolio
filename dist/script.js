@@ -33,14 +33,14 @@ asteriskButton.addEventListener('pointerenter',event=>{if(event.pointerType!=='t
 asteriskButton.addEventListener('click',shuffleAsterisk);
 asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-visible'))shuffleAsterisk();});
 
-// The study's subject is re-filed on hover: letters dissolve into the background's marks, then resolve left to right.
+// The study's subject is re-filed on hover: letters dissolve into the background's marks, then resolve left to right into a random other subject.
 (()=>{
  const el=$('study-subject'),marks=['·','•','+','✦','✳','⁕'];
  const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
  let index=0,timer,busy=false;
  function refile(){
   if(busy)return;busy=true;
-  const from=el.textContent;index=(index+1)%subjects.length;const to=subjects[index];
+  const from=el.textContent;index=(index+1+Math.floor(Math.random()*(subjects.length-1)))%subjects.length;const to=subjects[index];
   if(reducedMotion.matches){el.textContent=to;busy=false;return;}
   const len=Math.max(from.length,to.length),start=performance.now();
   timer=setInterval(()=>{
