@@ -13,6 +13,13 @@
   const still = matchMedia('(max-width: 700px), (prefers-reduced-motion: reduce)');
   let raf = 0, start = performance.now(), colors = { muted: [.57, .6, .62], ink: [.91, .91, .9] };
   const sheet = document.querySelector('.sheet');
+  const tabs = document.querySelector('.index-tabs');
+  let tabRect = [0, 0, 0, 0];
+  function measureTabs() {
+    if (!tabs) return;
+    const r = tabs.getBoundingClientRect(), h = host.getBoundingClientRect();
+    tabRect = [r.left - h.left, r.top - h.top, r.right - h.left, r.bottom - h.top];
+  }
   const dividers = [...document.querySelectorAll('.registration,.sheet>footer')];
 
   // Top-edge highlight (unchanged from the original).
@@ -43,7 +50,7 @@
 
   const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
   const FS = `precision highp float;
-uniform vec2 R;uniform float DPR;uniform float T;uniform float P;uniform float STEP;uniform float TINT;uniform float SCENE;uniform vec3 MUTED;uniform vec3 INK;
+uniform vec2 R;uniform float DPR;uniform float T;uniform float P;uniform float STEP;uniform float TINT;uniform float SCENE;uniform vec3 MUTED;uniform vec3 INK;uniform vec4 TABS;
 #define PI 3.14159265
 float b2(vec2 a){a=floor(a);return fract(dot(a,vec2(.5,a.y*.75)));}
 float b4(vec2 a){return b2(.5*a)*.25+b2(a);}
@@ -211,6 +218,10 @@ void main(){
  else if(SCENE<1.5)l=cloudsea(p,cell,ink);
  else l=galaxy(p,cell,ink);
  l=clamp(l,0.,1.);
+ // a smooth clearing around the tab row so the tabs stay easy to find
+ vec2 tq=max(max(TABS.xy-px,px-TABS.zw),0.);
+ float clear=TABS.z>TABS.x?smoothstep(0.,90.,length(tq))*.85+.15*smoothstep(0.,24.,length(tq)):1.;
+ l*=clear;ink*=clear;
  float on=step(b4(cell)*.94+.03,l);
  float r=mix(.62,1.3,l)*STEP/3.;
  float d=length(px-cc);
@@ -239,7 +250,7 @@ void main(){
     const loc = gl.getAttribLocation(program, 'p');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    ['R', 'DPR', 'T', 'P', 'STEP', 'TINT', 'SCENE', 'MUTED', 'INK'].forEach(k => U[k] = gl.getUniformLocation(program, k));
+    ['R', 'DPR', 'T', 'P', 'STEP', 'TINT', 'SCENE', 'MUTED', 'INK', 'TABS'].forEach(k => U[k] = gl.getUniformLocation(program, k));
   }
 
   function rgb(value, fallback) {
@@ -266,6 +277,7 @@ void main(){
     gl.uniform1f(U.SCENE, SCENE);
     gl.uniform3fv(U.MUTED, colors.muted);
     gl.uniform3fv(U.INK, colors.ink);
+    gl.uniform4fv(U.TABS, tabRect);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
@@ -287,6 +299,7 @@ void main(){
     canvas.width = Math.round(host.clientWidth * dpr);
     canvas.height = Math.round(host.clientHeight * dpr);
     if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
+    measureTabs();
     const palette = getComputedStyle(document.documentElement);
     colors = { muted: rgb(palette.getPropertyValue('--muted').trim(), '#929a9d'), ink: rgb(palette.getPropertyValue('--ink').trim(), '#e9e9e6') };
     draw(still.matches ? 40 : sceneTime(performance.now()));
@@ -305,6 +318,7 @@ void main(){
   }, { passive: true });
   document.documentElement.addEventListener('pointerleave', () => { dividers.forEach(divider => { divider.style.setProperty('--divider-x', '-999px'); divider.style.setProperty('--divider-y', '-999px'); }); });
   new ResizeObserver(resize).observe(host);
+  if (tabs) new ResizeObserver(resize).observe(tabs);
   resize();
   if (sheet) updateEdge(innerWidth * .65);
   sync();

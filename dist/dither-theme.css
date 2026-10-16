@@ -30,9 +30,8 @@
 .scroll-rail:hover .scroll-thumb,.scroll-rail.dragging .scroll-thumb,.scroll-rail:active .scroll-thumb{background:linear-gradient(180deg,var(--interaction-blue),var(--interaction-lilac) 36%,var(--interaction-peach) 66%,var(--interaction-mint))}
 .scroll-rail:hover .scroll-thumb,.scroll-rail.dragging .scroll-thumb,.scroll-rail:active .scroll-thumb{width:5px;left:5px}
 
-/* Keep the tabs easy to find: a soft clearing in the background behind the tab row, and denser inactive tabs. */
-.index-tabs::before{content:'';position:absolute;left:-56px;right:-56px;top:-34px;bottom:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 60% 100% at 50% 100%,var(--surround) 45%,color-mix(in srgb,var(--surround) 70%,transparent) 68%,transparent 100%)}
-.index-tabs button:not(.active){background:#14171ae6}
-.index-tabs button:hover:not(.active){background:#282e31}
-/* The selected tab always carries the same soft iridescent light the sheet's top edge shows on hover. */
-.index-tabs button.active::before{content:'';position:absolute;left:0;right:0;top:-1px;height:1px;pointer-events:none;background:linear-gradient(100deg,#b6d4ecdd,#d5c2ebcc 38%,#e8c8bfbb 65%,#bddfd3bb);box-shadow:0 0 6px 1px #d5c2eb40;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
+/* Tabs share the sheet's surface. The background clears smoothly around them (dist/dither.js), so they stay easy to find. */
+.index-tabs button,.index-tabs button.active,.index-tabs button.active::after{background:color-mix(in srgb,var(--paper) 58%,transparent);backdrop-filter:none;-webkit-backdrop-filter:none}
+.index-tabs button:hover:not(.active){background:color-mix(in srgb,#20262a 70%,transparent)}
+/* The selected tab carries the same soft iridescent light as the sheet's edge, along its top and bleeding a little way down both sides. */
+.index-tabs button.active::before{content:'';position:absolute;left:-1px;right:-1px;top:-1px;bottom:0;pointer-events:none;background:linear-gradient(100deg,#b6d4ecdd,#d5c2ebcc 38%,#e8c8bfbb 65%,#bddfd3bb) top/100% 1px no-repeat,linear-gradient(180deg,#b6d4ecbb,#b6d4ec44 22%,transparent 55%) left top/1px 100% no-repeat,linear-gradient(180deg,#bddfd3bb,#bddfd344 22%,transparent 55%) right top/1px 100% no-repeat;filter:drop-shadow(0 0 3px #d5c2eb50)}
