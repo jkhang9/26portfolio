@@ -117,3 +117,24 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  });
 })();
 
+
+/* Each new text selection shifts through the site's restrained iridescent palette. */
+(()=>{
+ const palette=['blue','lilac','mint'];
+ let index=-1;
+ const shiftTint=()=>{
+  index=(index+1)%palette.length;
+  document.documentElement.style.setProperty('--selection-tint','color-mix(in srgb,var(--interaction-'+palette[index]+') 27%,transparent)');
+ };
+ document.addEventListener('pointerdown',event=>{
+  if(event.button!==0||!(event.target instanceof Element))return;
+  if(event.target.closest('.sheet')&&!event.target.closest('a,button,input,textarea,select'))shiftTint();
+ });
+ document.addEventListener('keydown',event=>{
+  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='a')shiftTint();
+  else if(event.shiftKey&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)){
+   const selection=window.getSelection();
+   if(!selection||selection.isCollapsed)shiftTint();
+  }
+ });
+})();
