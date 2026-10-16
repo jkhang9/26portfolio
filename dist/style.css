@@ -136,7 +136,7 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 .work-strip{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(40px,4.5vw,72px);row-gap:80px}
 .work-strip>li{display:block}
 .work-strip>li+li{padding-top:0;border-top:0}
-.work-summary{min-width:0;padding:32px 0 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.work-summary{min-width:0;padding:32px 0 0;display:block}
 .work-project-name{margin:0;color:var(--muted)}
 .work-project-title{margin:12px 0 18px;font:var(--type-copy);color:var(--ink)}
 .work-summary .work-desc{margin:0;font:var(--type-body)}
@@ -154,3 +154,10 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 /* Keep the two-column project gallery airy, then stack before captions become cramped. */
 @media(min-width:721px) and (max-width:1000px){.work-strip{grid-template-columns:minmax(0,1fr);row-gap:64px}}
 @media(max-width:720px){.work-strip{grid-template-columns:minmax(0,1fr);row-gap:48px}}
+
+/* Project captions follow the About page's vertical text hierarchy. */
+.work-summary .work-project-title{margin:20px 0 24px}
+.work-project-link{display:inline-flex;align-items:center;gap:28px;margin-top:28px;padding-bottom:7px;border-bottom:1px solid var(--accent);font:var(--type-ui);text-decoration:none;color:var(--ink)}
+.work-project-link span{display:inline-block;transition:transform .25s}
+.work-project-link:hover span{transform:rotate(90deg)}
+@media(max-width:720px){.work-summary .work-project-title{margin:16px 0 20px}}
