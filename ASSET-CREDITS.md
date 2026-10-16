@@ -14,3 +14,5 @@ Playground thumbnails (Janice Khang projects):
 - Translate: a source-based illustration of the document editor and its tone controls, not a screenshot.
 
 All thumbnails are local WebP files in `dist/playground/`. Private repositories, third-party forks, and demos that do not serve a built app are excluded.
+
+- Bananink: published Site thumbnail from `bananink-janice.jkhang.chatgpt.site`, resized to WebP.

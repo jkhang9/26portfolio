@@ -21,5 +21,5 @@ python3 -m http.server 8000 --directory dist
 - `ASSET-CREDITS.md`: image attribution
 - `dist/palette-comparison.html` and `dist/type-comparison.html`: earlier design explorations
 
-Playground features six original GitHub experiments, with local thumbnails and verified public demo links. About contains the continuous folded layout. Only content within the paper scrolls.
+Playground features seven original experiments, with local thumbnails and verified public demo links. About contains the continuous folded layout. Only content within the paper scrolls.
 
