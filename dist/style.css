@@ -52,7 +52,7 @@ b,em,i,strong{font-weight:inherit;font-style:normal}button,a{color:inherit;-webk
  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1.5 6.5l5-5M2.5 1.5h4v4' fill='none' stroke='black' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1.5 6.5l5-5M2.5 1.5h4v4' fill='none' stroke='black' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
  transition:transform .32s cubic-bezier(.2,.7,.2,1),background-color .2s}
-:is(.co-link,.work-project-link,#explore-playground):hover,:is(.co-link,.work-project-link,#explore-playground):focus-visible::before{opacity:1}
+:is(.co-link,.work-project-link,#explore-playground):hover::before,:is(.co-link,.work-project-link,#explore-playground):focus-visible::before{opacity:1}
 :is(.co-link,.work-project-link,#explore-playground):hover::after,:is(.co-link,.work-project-link,#explore-playground):focus-visible::after{transform:translate(2px,-2px);background:var(--ink)}
 :is(.co-link,.work-project-link,#explore-playground):focus-visible{outline:1px solid var(--muted);outline-offset:3px}
 @media(prefers-reduced-motion:reduce){:is(.co-link,.work-project-link,#explore-playground),:is(.co-link,.work-project-link,#explore-playground)::after{transition:none}}
