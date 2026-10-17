@@ -39,7 +39,7 @@ b,em,i,strong{font-weight:inherit;font-style:normal}button,a{color:inherit;-webk
 /* Statement never takes more than half the width. */
 .work-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
 .work-statement{margin:0;font:var(--type-note);color:var(--ink)}
-.work-blurb{max-width:58ch;margin:0;font:400 20px/1.45 var(--sans);color:var(--ink)}
+.work-blurb{max-width:58ch;margin:0;text-wrap:pretty;font:400 20px/1.45 var(--sans);color:var(--ink)}
 .work-roles{margin:0;display:grid;gap:44px;text-align:right}
 .work-roles dt{color:var(--muted)}/* Roles: Geist UI style in sentence case; company names are set in mono caps. */
 .work-roles dd{margin:12px 0 0;font:var(--type-ui);color:var(--ink)}.work-roles dd+dd{margin-top:16px}
