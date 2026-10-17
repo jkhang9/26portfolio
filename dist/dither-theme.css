@@ -39,3 +39,5 @@
 .registration{grid-template-columns:minmax(0,1fr) auto}
 .study-meta{text-align:left}
 .location-meta{text-align:right}
+/* Footer recedes to the same muted tone as the contact icons, so the main content leads. */
+.sheet>footer .small-label,.sheet>footer .small-label b{color:var(--muted)}
