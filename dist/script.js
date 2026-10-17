@@ -33,8 +33,8 @@ asteriskButton.addEventListener('pointerenter',event=>{if(event.pointerType!=='t
 asteriskButton.addEventListener('click',shuffleAsterisk);
 asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-visible'))shuffleAsterisk();});
 
-// The study's subject is re-filed on hover, like a model thinking it through: the old phrase gathers into a single
-// asterisk, the asterisk turns through its forms while it thinks, then it moves right, writing the new phrase
+// The study's subject is re-filed on hover, like a model thinking it through: the old phrase decodes into noise as it
+// gathers into a single asterisk, the asterisk turns through its forms while it thinks, then it moves right, writing the new phrase
 // behind it like a cursor. Letters sit in fixed-width cells; the asterisk is drawn centred over its cell, never clipped.
 (()=>{
  const el=$('study-subject');
@@ -45,17 +45,25 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  const star=(k,cls)=>`<span class="glyph seed${cls?' '+cls:''}" aria-hidden="true"> <i>${stars[k%stars.length]}</i></span>`;
  let index=subjects.indexOf(el.textContent.trim());if(index<0)index=0;
  let busy=false;
- const GATHER=300,THINK=520,STEP=40;
+ const GATHER=460,THINK=520,STEP=42,DECODE=90,ZONE=4;
+ const letters='ABCDEFGHIJKLMNOPRSTUVWXYZ',marks=['·','•','+'];
+ const rand=list=>list[Math.floor(Math.random()*list.length)];
  function run(dur,step){return new Promise(done=>{const s=performance.now();(function f(n){const t=Math.min(n-s,dur);step(t);if(t<dur)requestAnimationFrame(f);else done();})(s);});}
  async function refile(){
   if(busy)return;busy=true;
   const from=el.textContent;index=(index+1+Math.floor(Math.random()*(subjects.length-1)))%subjects.length;const to=subjects[index];
   el.setAttribute('aria-label',to);
   if(reducedMotion.matches){el.textContent=to;busy=false;return;}
-  // gather: the old phrase draws back into the asterisk
+  // gather: the old phrase draws back into the asterisk; the letters nearest it decode into noise as they go
+  const noise=[...from].map(()=>({g:'',next:0}));
   await run(GATHER,t=>{
    const n=Math.max(0,Math.round(from.length*(1-ease(t/GATHER))));let h='';
-   for(let i=0;i<n;i++)h+=cell(from[i],(n-i)/Math.max(1,n)<.35?'leaving':'');
+   for(let i=0;i<n;i++){
+    const d=n-1-i,c=from[i];
+    if(d>=ZONE||c===' '){h+=cell(c);continue;}
+    const z=noise[i];if(t>=z.next){z.g=d===0?rand(marks):rand(letters);z.next=t+45+Math.random()*50;}
+    h+=cell(z.g,d<2?'decode':'leaving');
+   }
    el.innerHTML=h+star(Math.floor(t/80),'big');
   });
   // think: the asterisk turns through its forms
@@ -63,7 +71,12 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   // write: the asterisk moves right, leaving the new phrase behind it
   await run(to.length*STEP+240,t=>{
    const k=Math.min(to.length,Math.floor(t/STEP));let h='';
-   for(let i=0;i<k;i++)h+=cell(to[i]===' '?' ':to[i],t-i*STEP<200?'glint':'');
+   for(let i=0;i<k;i++){
+    const age=t-i*STEP,c=to[i];
+    // each new letter decodes for a beat right behind the asterisk before it settles
+    if(c!==' '&&age<DECODE){h+=cell(age<DECODE/2?rand(letters):rand(letters),'leaving');continue;}
+    h+=cell(c,age<DECODE+180?'glint':'');
+   }
    if(k<to.length)h+=star(Math.floor(t/70),'big lead');
    el.innerHTML=h;
   });
