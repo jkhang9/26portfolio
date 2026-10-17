@@ -186,3 +186,13 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  pw.addEventListener('mousemove',e=>ls.forEach(l=>{const r=l.getBoundingClientRect();l.style.setProperty('--t',Math.max(.75,1-Math.abs(e.clientX-(r.left+r.width/2))/160).toFixed(2))}));
  pw.addEventListener('mouseleave',()=>{inside=false;if(!pw.classList.contains('wave'))fade()});
 })();
+
+// Link underlines: once a hover starts the left-to-right wipe it always finishes (WIPE ms), then fades out on leave.
+(()=>{
+ const WIPE=320;
+ document.querySelectorAll('.co-link,.work-project-link,#explore-playground').forEach(a=>{
+  let since=0,off=0;
+  a.addEventListener('mouseenter',()=>{clearTimeout(off);if(!a.classList.contains('on')){since=performance.now();a.classList.add('on')}});
+  a.addEventListener('mouseleave',()=>{off=setTimeout(()=>a.classList.remove('on'),Math.max(0,WIPE-(performance.now()-since)))});
+ });
+})();
