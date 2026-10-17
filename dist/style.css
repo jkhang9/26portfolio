@@ -211,7 +211,7 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 }
 
 /* Details rise in a solid inset panel over the image on hover. */
-.work-strip .work-summary,.work-strip .work-card:hover .work-summary{inset:auto 20px 20px;padding:20px;background:#0b0b0cb8;border:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.work-strip .work-summary,.work-strip .work-card:hover .work-summary{inset:auto 20px 20px;padding:20px;background:#050506e0;border:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .work-strip .work-project-title{margin:12px 0 0;font:var(--type-ui);color:var(--ink)}
 .work-strip .work-project-tag{display:inline-block;margin:0;padding:1px 6px;background:var(--accent);color:var(--muted)}
-@media(hover:none),(max-width:720px){.work-strip .work-summary{inset:auto 12px 12px;padding:16px;background:#0b0b0cb8}}
+@media(hover:none),(max-width:720px){.work-strip .work-summary{inset:auto 12px 12px;padding:16px;background:#050506e0}}
