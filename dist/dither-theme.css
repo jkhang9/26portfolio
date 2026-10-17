@@ -35,3 +35,7 @@
 .index-tabs button:hover:not(.active){background:color-mix(in srgb,#20262a 70%,transparent)}
 /* The selected tab carries the same soft iridescent light as the sheet's edge, along its top and bleeding a little way down both sides. */
 .index-tabs button.active::before{content:'';position:absolute;left:-1px;right:-1px;top:-1px;bottom:0;pointer-events:none;background:linear-gradient(100deg,#b6d4ecdd,#d5c2ebcc 38%,#e8c8bfbb 65%,#bddfd3bb) top/100% 1px no-repeat,linear-gradient(180deg,#b6d4ecbb,#b6d4ec44 22%,transparent 55%) left top/1px 100% no-repeat,linear-gradient(180deg,#bddfd3bb,#bddfd344 22%,transparent 55%) right top/1px 100% no-repeat;filter:drop-shadow(0 0 3px #d5c2eb50)}
+/* Header: the study line sits in the left corner and the location in the right corner. */
+.registration{grid-template-columns:minmax(0,1fr) auto}
+.study-meta{text-align:left}
+.location-meta{text-align:right}
