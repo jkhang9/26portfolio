@@ -72,14 +72,7 @@ function open(i){
  const on=st[i].target===0;if(on)pose[i]=poseFor(i);st.forEach(s=>s.target=0);if(on)st[i].target=1;
  sync_open();request();
 }
-const scroller=page.parentElement;
-// Where the enlarged card sits: centred on its own cell, pulled back inside the spread and the part of the page that is on screen.
-function poseFor(i){
- const pr=page.getBoundingClientRect(),lr=list.getBoundingClientRect(),fr=scroller.getBoundingClientRect(),[x,y,w,h]=rects[i],half=w*zoom/2,cx=x+w/2,cy=y+h/2;
- const x0=Math.max(lr.left,fr.left)-pr.left,x1=Math.min(lr.right,fr.right)-pr.left,y0=Math.max(lr.top,fr.top)-pr.top,y1=Math.min(lr.bottom,fr.bottom)-pr.top;
- const cl=(v,a,b)=>b-a<2*half?(a+b)/2:Math.min(Math.max(v,a+half),b-half);
- return{dx:cl(cx,x0,x1)-cx,dy:cl(cy,y0,y1)-cy};
-}
+function poseFor(){return{dx:0,dy:0}}
 function sync_open(){buttons.forEach((b,k)=>{const p=st[k].target===1,q=pose[k];b.setAttribute('aria-pressed',p);cells[k].classList.toggle('flipped',p);
  b.style.transform=p&&q&&gl?`translate(${q.dx}px,${q.dy}px) scale(${zoom})`:''})}
 function close(){if(!st.some(s=>s.target))return;st.forEach(s=>s.target=0);sync_open();request()}
@@ -91,7 +84,6 @@ buttons.forEach((b,i)=>{
  b.addEventListener('pointermove',e=>{const r=b.getBoundingClientRect();st[i].px=(e.clientX-r.left)/r.width;st[i].py=(e.clientY-r.top)/r.height;if(gl)request()});
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!page.hidden)close()});
-scroller.addEventListener('scroll',close,{passive:true});
 document.addEventListener('click',e=>{if(!page.hidden&&!e.target.closest('.slide'))close()});
 
 // ---- WebGL -------------------------------------------------------------------------------------------------------------
@@ -99,8 +91,8 @@ const VS=`attribute vec2 aUv;uniform vec4 uRect;uniform vec2 uView;uniform float
 void main(){float w=uRect.z,h=uRect.w,s=sin(uAngle),c=cos(uAngle);
  float x=(aUv.x-.5)*w,y=(aUv.y-.5)*h;
  float z=x*s+s*.09*w*(1.-pow(2.*aUv.x-1.,2.));
- float k=3.*w/(3.*w-z)*uZoom*(1.+.018*uHover);
- vec2 p=uRect.xy+uRect.zw*.5+vec2(x*c,y)*k+vec2(0.,-4.*uHover);
+ float k=7.*w/(7.*w-z)*uZoom;
+ vec2 p=uRect.xy+uRect.zw*.5+vec2(x*c,y)*k;
  gl_Position=vec4(p.x/uView.x*2.-1.,1.-p.y/uView.y*2.,0.,1.);vUv=aUv;vZ=z/w;}`;
 const FS=`precision highp float;varying vec2 vUv;varying float vZ;uniform sampler2D uFront,uBackTex;uniform float uAngle,uHover;uniform vec2 uPtr;uniform vec4 uWin;uniform float uFx,uTime;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -195,8 +187,8 @@ function layout(){
  W=pr.width;H=pr.height;dpr=Math.min(2,window.devicePixelRatio||1);
  rects=buttons.map(b=>{const r=b.getBoundingClientRect();return[r.left-pr.left,r.top-pr.top,r.width,r.height]});
  if(gl){canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);gl.viewport(0,0,canvas.width,canvas.height)}
- const lr=list.getBoundingClientRect(),w0=rects[0][2];
- zoom=Math.max(1,Math.min(2.4,.94*Math.min(lr.width,scroller.clientHeight)/w0));
+ const w0=rects[0][2];
+ zoom=1; // the card turns in place at its own size
  pose=rects.map((_,i)=>st[i].target?poseFor(i):{dx:0,dy:0});
  if(Math.abs(w0-texW)>1.5)buildTextures(w0);sync_open();
  page.classList.add('ready');draw();
