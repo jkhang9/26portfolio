@@ -68,12 +68,13 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   });
   // think: the asterisk turns through its forms
   await run(THINK,t=>{el.innerHTML=star(Math.floor(t/170),'big'+(Math.sin(t*.008)>0?'':' pulse'));});
-  // write: the asterisk moves right, leaving the new phrase behind it
-  const wnoise=[...to].map(()=>({g:rand(letters),next:0}));
-  await run(to.length*STEP+DECODE+320,t=>{
-   const k=Math.min(to.length,Math.floor(t/STEP));let h='';
+  // write: the asterisk moves right with the same ease as the gather, leaving the new phrase behind it
+  const wnoise=[...to].map(()=>({g:rand(letters),next:0})),born=[],WRITE=to.length*STEP;
+  await run(WRITE+DECODE+320,t=>{
+   const k=Math.min(to.length,Math.round(to.length*ease(Math.min(1,t/WRITE))));let h='';
    for(let i=0;i<k;i++){
-    const age=t-i*STEP,c=to[i];
+    if(born[i]===undefined)born[i]=t;
+    const age=t-born[i],c=to[i];
     // each new letter decodes for a beat right behind the asterisk before it settles
     if(c!==' '&&age<DECODE){const z=wnoise[i];if(t>=z.next){z.g=rand(letters);z.next=t+70;}h+=cell(z.g,'leaving');continue;}
     h+=cell(c,age<DECODE+320?'glint':'');
