@@ -163,11 +163,11 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 
 /* Work titles appear on the image; the existing visit badge remains the sole call to action. */
 .work-strip .work-card{overflow:hidden}
-.work-strip .work-summary{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:72px 28px 28px;background:linear-gradient(180deg,transparent 10%,color-mix(in srgb,var(--paper) 65%,transparent) 48%,var(--paper) 100%);opacity:0;transition:opacity .28s ease;pointer-events:none}
+.work-strip .work-summary{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:72px 28px 28px;background:linear-gradient(180deg,transparent 10%,color-mix(in srgb,var(--paper) 65%,transparent) 48%,var(--paper) 100%);opacity:0;transform:translateY(8px);transition:opacity .38s cubic-bezier(.22,1,.36,1),transform .42s cubic-bezier(.22,1,.36,1);pointer-events:none}
 .work-strip .work-title-group{transform:translateY(6px);transition:transform .3s ease}
 .work-strip .work-project-title{margin:14px 0 0}
 .work-strip .work-card .visit-badge{z-index:2}
-.work-strip .work-card:is(:hover,:focus-visible) .work-summary{opacity:1}
+.work-strip .work-card:is(:hover,:focus-visible) .work-summary{opacity:1;transform:translateY(0)}
 .work-strip .work-card:is(:hover,:focus-visible) .work-title-group{transform:none}
 @media(hover:none),(max-width:720px){
  .work-strip .work-summary{position:absolute;inset:0;padding:72px 28px 28px;background:linear-gradient(180deg,transparent 10%,color-mix(in srgb,var(--paper) 65%,transparent) 48%,var(--paper) 100%);opacity:0}
@@ -210,7 +210,9 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 }
 
 /* Details rise in a solid inset panel over the image on hover. */
-.work-strip .work-summary,.work-strip .work-card:hover .work-summary{inset:auto 20px 20px;padding:20px;background:#050506e0;border:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.work-strip .work-summary,.work-strip .work-card:hover .work-summary{inset:auto 0 0;padding:20px;background:#050506e0;border:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .work-strip .work-project-title{margin:12px 0 0;font:var(--type-ui);color:var(--ink)}
 .work-strip .work-project-tag{display:inline-block;margin:0;padding:1px 6px;background:var(--accent);color:var(--muted)}
-@media(hover:none),(max-width:720px){.work-strip .work-summary{inset:auto 12px 12px;padding:16px;background:#050506e0}}
+@media(hover:none),(max-width:720px){.work-strip .work-summary{inset:auto 0 0;padding:16px;background:#050506e0;transform:none}}
+
+@media(prefers-reduced-motion:reduce){.work-strip .work-summary,.work-strip .work-title-group{transition:none;transform:none}}
