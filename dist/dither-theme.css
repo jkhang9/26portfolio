@@ -52,3 +52,7 @@
 .study-subject .glyph.seed i{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font:normal 1.05em/1 'Asterisk Symbols';font-variant-emoji:text;white-space:nowrap;color:var(--ink);transition:opacity .2s ease}
 .study-subject .glyph.seed.pulse i{opacity:.55}
 .study-subject .glyph.seed.lead i{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* Iridescent thumbnail outline on hover. */
+.work-strip .work-card::after{content:'';position:absolute;inset:0;z-index:3;padding:1px;background:var(--iridescence);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .28s ease;pointer-events:none}
+.work-strip .work-card:is(:hover,:focus-visible)::after{opacity:1}
+@media(hover:none){.work-strip .work-card::after{display:none}}
