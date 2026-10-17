@@ -1,5 +1,5 @@
 // About: sixteen slide mounts drawn in WebGL. Each card is a bent quad; the vertex shader turns it on its vertical axis with a
-// little paper bow and perspective, the fragment shader adds paper tooth, fold shading and a faint thin-film sheen that follows
+// little paper bow and perspective, the fragment shader adds paper tooth, fold shading and a faint monochrome sheen that follows
 // the pointer. Faces are painted once to 2D canvases (so text and stamps use the site fonts) and uploaded as textures.
 // The buttons in the DOM stay the real controls; without WebGL the same faces are shown as canvases and cross-fade.
 (()=>{
@@ -91,8 +91,7 @@ void main(){bool back=uAngle>1.5707963;vec2 uv=vUv;if(back)uv.x=1.-uv.x;
  col+=(hash(floor(vUv*420.))-.5)*.035;
  float pos=uv.x*.8+uv.y*.5,at=.15+uPtr.x*.7+uPtr.y*.2+uAngle/3.14159*.9;
  float band=exp(-pow(pos-at,2.)*28.),amt=clamp(.6*uHover+s,0.,1.);
- vec3 irid=.78+.22*cos(6.2832*(vec3(0.,.33,.67)+uv.x*.6+uAngle*.2));
- col=mix(col,irid,.2*band*amt);
+ col=mix(col,vec3(.92),.14*band*amt);
  col=mix(col,vec3(0.),s*(.12+.3*clamp(.3-vZ,0.,1.)));
  gl_FragColor=vec4(col*t.a,t.a);}`;
 const SVS=`attribute vec2 aUv;uniform vec4 uBox;uniform vec2 uView;varying vec2 vP;
