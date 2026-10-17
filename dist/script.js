@@ -45,7 +45,7 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  const star=(k,cls)=>`<span class="glyph seed${cls?' '+cls:''}" aria-hidden="true"> <i>${stars[k%stars.length]}</i></span>`;
  let index=subjects.indexOf(el.textContent.trim());if(index<0)index=0;
  let busy=false;
- const GATHER=460,THINK=520,STEP=42,DECODE=90,ZONE=4;
+ const GATHER=900,THINK=800,STEP=75,DECODE=180,ZONE=4;
  const letters='ABCDEFGHIJKLMNOPRSTUVWXYZ',marks=['·','•','+'];
  const rand=list=>list[Math.floor(Math.random()*list.length)];
  function run(dur,step){return new Promise(done=>{const s=performance.now();(function f(n){const t=Math.min(n-s,dur);step(t);if(t<dur)requestAnimationFrame(f);else done();})(s);});}
@@ -61,23 +61,24 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
    for(let i=0;i<n;i++){
     const d=n-1-i,c=from[i];
     if(d>=ZONE||c===' '){h+=cell(c);continue;}
-    const z=noise[i];if(t>=z.next){z.g=d===0?rand(marks):rand(letters);z.next=t+45+Math.random()*50;}
+    const z=noise[i];if(t>=z.next){z.g=d===0?rand(marks):rand(letters);z.next=t+80+Math.random()*70;}
     h+=cell(z.g,d<2?'decode':'leaving');
    }
-   el.innerHTML=h+star(Math.floor(t/80),'big');
+   el.innerHTML=h+star(Math.floor(t/130),'big');
   });
   // think: the asterisk turns through its forms
-  await run(THINK,t=>{el.innerHTML=star(Math.floor(t/110),'big'+(Math.sin(t*.012)>0?'':' pulse'));});
+  await run(THINK,t=>{el.innerHTML=star(Math.floor(t/170),'big'+(Math.sin(t*.008)>0?'':' pulse'));});
   // write: the asterisk moves right, leaving the new phrase behind it
-  await run(to.length*STEP+240,t=>{
+  const wnoise=[...to].map(()=>({g:rand(letters),next:0}));
+  await run(to.length*STEP+DECODE+320,t=>{
    const k=Math.min(to.length,Math.floor(t/STEP));let h='';
    for(let i=0;i<k;i++){
     const age=t-i*STEP,c=to[i];
     // each new letter decodes for a beat right behind the asterisk before it settles
-    if(c!==' '&&age<DECODE){h+=cell(age<DECODE/2?rand(letters):rand(letters),'leaving');continue;}
-    h+=cell(c,age<DECODE+180?'glint':'');
+    if(c!==' '&&age<DECODE){const z=wnoise[i];if(t>=z.next){z.g=rand(letters);z.next=t+70;}h+=cell(z.g,'leaving');continue;}
+    h+=cell(c,age<DECODE+320?'glint':'');
    }
-   if(k<to.length)h+=star(Math.floor(t/70),'big lead');
+   if(k<to.length)h+=star(Math.floor(t/120),'big lead');
    el.innerHTML=h;
   });
   el.textContent=to;busy=false;
