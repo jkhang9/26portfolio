@@ -57,12 +57,12 @@
 .dots-link,.persona{cursor:default}
 .persona{white-space:nowrap}
 .dots-link{word-spacing:0;transition:word-spacing .35s cubic-bezier(.2,.7,.2,1)}
-.dots-link:hover{word-spacing:.45em}
+.dots-link.on{word-spacing:.45em}
 .dots-link .w{background:var(--iridescence) var(--ox,0) 0/var(--mw,100%) 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:var(--ink);transition:color .45s cubic-bezier(.2,.7,.2,1)}
-.dots-link:hover .w{color:transparent}
+.dots-link.on .w{color:transparent}
 .dots-link .sp{position:relative}
 .dots-link .sp::after{content:'·';position:absolute;left:50%;top:0;transform:translateX(-50%);color:var(--interaction-lilac);opacity:0;transition:opacity .25s}
-.dots-link:hover .sp::after{opacity:1}
+.dots-link.on .sp::after{opacity:1}
 .persona .l{display:inline-block;--t:0;color:color-mix(in srgb,var(--c) calc(var(--t)*100%),var(--ink));transition:color .25s}
 .persona.wave .l{animation:persona-wave .6s cubic-bezier(.2,.7,.2,1) calc(var(--i)*35ms)}
 @keyframes persona-wave{40%{transform:translateY(-.18em)}}
