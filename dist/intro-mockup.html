@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro mockup</title>
+<style>
+@font-face{font-family:'Geist';src:url('fonts/geist-regular.woff2') format('woff2')}
+@font-face{font-family:'Crimson Pro';src:url('fonts/crimson-pro-italic.woff2') format('woff2');font-style:italic}
+@font-face{font-family:'Newsreader';src:url('fonts/newsreader-normal.woff2') format('woff2')}
+@font-face{font-family:'Commit Mono';src:url('fonts/commit-mono-regular.woff2') format('woff2')}
+:root{--bg:#141414;--ink:#e8e8e3;--muted:#9a9a94;--line:rgba(232,232,227,.35)}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--muted);font:400 22px/1.6 'Geist',Arial,sans-serif;padding:48px 24px}
+.intro{max-width:34em}
+h1{font:400 36px/1.3 'Geist',Arial,sans-serif;color:var(--ink);margin:0 0 28px}
+p{margin:0 0 20px}
+.link,.persona{color:var(--ink);text-decoration:none;background:linear-gradient(var(--line),var(--line)) 0 100%/100% 1px no-repeat;padding-bottom:1px;transition:background-size .2s,color .2s}
+.link:hover{background-size:100% 2px}
+/* The persona chip: width animates to its content so the line never jumps. */
+.persona{display:inline-block;vertical-align:baseline;border:0;margin:0;font:inherit;cursor:pointer;
+ background-image:radial-gradient(circle,var(--line) 1px,transparent 1.2px);background-size:4px 3px;background-repeat:repeat-x;background-position:0 100%;
+ transition:width .22s cubic-bezier(.3,.7,.2,1);white-space:nowrap;overflow:visible;text-align:left;border-radius:3px;padding:0 1px 2px}
+.persona:hover{color:#fff}
+.persona:focus{outline:none}
+.persona:focus-visible{outline:1.5px solid var(--line);outline-offset:3px}
+.persona span{display:inline-block;transition:opacity .12s,transform .12s}
+.persona.out span{opacity:0;transform:translateY(3px)}
+.f0{font-family:'Crimson Pro',serif;font-style:italic;font-size:1.12em;letter-spacing:.005em}
+.f1{font-family:'Commit Mono',monospace;font-size:.86em;letter-spacing:-.01em}
+.f2{font-family:'Newsreader',serif;font-size:1.05em}
+.hint{font:400 12px/1 'Commit Mono',monospace;color:#5c5c58;margin-top:48px}
+</style>
+</head>
+<body>
+<main class="intro">
+ <h1>Hi! I'm Janice,<br>an AI-native design engineer.</h1>
+ <p>I like <a class="link" href="#">connecting the dots</a>, questioning what’s necessary, and finding a way to make it all feel effortless.</p>
+ <p>And just because something is functional doesn’t mean it can’t have a little <button class="persona" type="button" aria-label="personality — change the typeface"><span class="f0">personality!</span></button></p>
+ <p class="hint">click / tap “personality!” to cycle</p>
+</main>
+<script>
+const btn=document.querySelector('.persona'),word=btn.querySelector('span');
+const faces=['f0','f1','f2'];let i=0,busy=false;
+const fit=()=>{btn.style.width=word.getBoundingClientRect().width+2+'px'};
+document.fonts.ready.then(fit);
+btn.addEventListener('click',()=>{
+ if(busy)return;busy=true;
+ btn.classList.add('out');
+ setTimeout(()=>{
+  word.className=faces[i=(i+1)%faces.length];
+  fit();btn.classList.remove('out');busy=false;
+ },120);
+});
+</script>
+</body>
+</html>
