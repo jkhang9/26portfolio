@@ -209,3 +209,9 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
  .contact-footer .social-links a{width:32px;height:44px}
  .contact-footer .copyright-vertical{flex:0 0 auto;white-space:nowrap;font-size:9px;text-align:right}
 }
+
+/* Panel variant: details rise in an inset box over the image on hover. */
+.work-strip .work-card--panel .work-summary{inset:auto 20px 20px;padding:24px;background:var(--paper);border:1px solid var(--accent)}
+.work-strip .work-card--panel .work-project-title{margin:0;max-width:22ch;font:var(--type-copy)}
+.work-strip .work-card--panel .work-project-tag{display:inline-block;margin:16px 0 0;padding:4px 10px;background:var(--accent);color:var(--muted)}
+@media(hover:none),(max-width:720px){.work-strip .work-card--panel .work-summary{inset:auto 12px 12px;padding:16px;background:var(--paper)}}
