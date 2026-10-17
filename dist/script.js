@@ -40,7 +40,6 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
  const el=$('study-subject');
  const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
  const stars=['✱','✲','✳','✻','✼','✽','✾'].map(s=>s+'︎');
- const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
  const cell=(ch,cls)=>`<span class="glyph${cls?' '+cls:''}">${ch}</span>`;
  const star=(k,cls)=>`<span class="glyph seed${cls?' '+cls:''}" aria-hidden="true"> <i>${stars[k%stars.length]}</i></span>`;
  let index=subjects.indexOf(el.textContent.trim());if(index<0)index=0;
@@ -57,7 +56,7 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   // gather: the old phrase draws back into the asterisk; the letters nearest it decode into noise as they go
   const noise=[...from].map(()=>({g:'',next:0}));
   await run(GATHER,t=>{
-   const n=Math.max(0,Math.round(from.length*(1-ease(t/GATHER))));let h='';
+   const n=Math.max(0,Math.round(from.length*(1-t/GATHER)));let h='';
    for(let i=0;i<n;i++){
     const d=n-1-i,c=from[i];
     if(d>=ZONE||c===' '){h+=cell(c);continue;}
@@ -68,10 +67,10 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   });
   // think: the asterisk turns through its forms
   await run(THINK,t=>{el.innerHTML=star(Math.floor(t/170),'big'+(Math.sin(t*.008)>0?'':' pulse'));});
-  // write: the asterisk moves right with the same ease as the gather, leaving the new phrase behind it
+  // write: the asterisk moves right at a steady pace, leaving the new phrase behind it
   const wnoise=[...to].map(()=>({g:rand(letters),next:0})),born=[],WRITE=to.length*STEP;
   await run(WRITE+DECODE+320,t=>{
-   const k=Math.min(to.length,Math.round(to.length*ease(Math.min(1,t/WRITE))));let h='';
+   const k=Math.min(to.length,Math.round(to.length*Math.min(1,t/WRITE)));let h='';
    for(let i=0;i<k;i++){
     if(born[i]===undefined)born[i]=t;
     const age=t-born[i],c=to[i];
