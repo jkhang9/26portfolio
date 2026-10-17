@@ -162,3 +162,21 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   }
  });
 })();
+
+// Blurb hovers: keep one continuous iridescence across the dots phrase, and wave + pointer-tint "personality!".
+(()=>{
+ const mark=document.querySelector('.dots-link'),pw=document.getElementById('persona');
+ if(mark){
+  const fit=()=>{const m=mark.getBoundingClientRect();mark.querySelectorAll('.w').forEach(w=>{w.style.setProperty('--mw',m.width+'px');w.style.setProperty('--ox',(m.left-w.getBoundingClientRect().left)+'px')})};
+  mark.addEventListener('mouseenter',fit);mark.addEventListener('transitionend',fit);
+ }
+ if(!pw)return;
+ const T=pw.textContent,IRIS=['--interaction-blue','--interaction-lilac','--interaction-peach','--interaction-mint'];
+ pw.setAttribute('aria-label',T);
+ pw.innerHTML=[...T].map((c,i)=>`<span class="l" aria-hidden="true" style="--i:${i};--c:var(${IRIS[Math.floor(i/T.length*IRIS.length)]})">${c}</span>`).join('');
+ const ls=[...pw.children];
+ pw.addEventListener('mouseenter',()=>{pw.classList.remove('wave');void pw.offsetWidth;pw.classList.add('wave')});
+ pw.addEventListener('animationend',e=>{if(e.target===ls[ls.length-1])pw.classList.remove('wave')});
+ pw.addEventListener('mousemove',e=>ls.forEach(l=>{const r=l.getBoundingClientRect();l.style.setProperty('--t',Math.max(.75,1-Math.abs(e.clientX-(r.left+r.width/2))/160).toFixed(2))}));
+ pw.addEventListener('mouseleave',()=>ls.forEach(l=>l.style.setProperty('--t',0)));
+})();

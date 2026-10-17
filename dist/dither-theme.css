@@ -52,3 +52,18 @@
 .study-subject .glyph.seed i{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font:normal 1.05em/1 'Asterisk Symbols';font-variant-emoji:text;white-space:nowrap;color:var(--ink);transition:opacity .2s ease}
 .study-subject .glyph.seed.pulse i{opacity:.55}
 .study-subject .glyph.seed.lead i{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* Blurb hovers: "connecting the dots" opens interpuncts and takes the iridescence; "personality!" waves and tints toward the pointer. */
+.dots-link,.persona{cursor:default}
+.persona{white-space:nowrap}
+.dots-link{word-spacing:0;transition:word-spacing .35s cubic-bezier(.2,.7,.2,1)}
+.dots-link:hover{word-spacing:.45em}
+.dots-link .w{background:var(--iridescence) var(--ox,0) 0/var(--mw,100%) 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:var(--ink);transition:color .45s cubic-bezier(.2,.7,.2,1)}
+.dots-link:hover .w{color:transparent}
+.dots-link .sp{position:relative}
+.dots-link .sp::after{content:'·';position:absolute;left:50%;top:0;transform:translateX(-50%);color:var(--interaction-lilac);opacity:0;transition:opacity .25s}
+.dots-link:hover .sp::after{opacity:1}
+.persona .l{display:inline-block;--t:0;color:color-mix(in srgb,var(--c) calc(var(--t)*100%),var(--ink));transition:color .25s}
+.persona.wave .l{animation:persona-wave .6s cubic-bezier(.2,.7,.2,1) calc(var(--i)*35ms)}
+@keyframes persona-wave{40%{transform:translateY(-.18em)}}
+@media(prefers-reduced-motion:reduce){.dots-link,.dots-link .w,.dots-link .sp::after,.persona .l{transition:none}.persona.wave .l{animation:none}}
