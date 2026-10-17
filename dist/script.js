@@ -33,51 +33,41 @@ asteriskButton.addEventListener('pointerenter',event=>{if(event.pointerType!=='t
 asteriskButton.addEventListener('click',shuffleAsterisk);
 asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-visible'))shuffleAsterisk();});
 
-// The study's subject is re-filed on hover, like a model thinking it through: the old words dim out left to right,
-// a soft wave of dots runs across the shape of the next phrase, then each letter resolves in order with a brief
-// iridescent glint. A few asterisks bloom along the way. Every character sits in a fixed-width cell, so the line never jumps.
+// The study's subject is re-filed on hover, like a model thinking it through: the old phrase gathers into a single
+// asterisk, the asterisk turns through its forms while it thinks, then it moves right, writing the new phrase
+// behind it like a cursor. Letters sit in fixed-width cells; the asterisk is drawn centred over its cell, never clipped.
 (()=>{
  const el=$('study-subject');
  const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
- const letters='ABCDEFGHIJKLMNOPRSTUVWY',stars=['✱','✲','✳','✻','✼','✽','✾'];
+ const stars=['✱','✲','✳','✻','✼','✽','✾'].map(s=>s+'︎');
+ const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+ const cell=(ch,cls)=>`<span class="glyph${cls?' '+cls:''}">${ch}</span>`;
+ const star=(k,cls)=>`<span class="glyph seed${cls?' '+cls:''}" aria-hidden="true"> <i>${stars[k%stars.length]}</i></span>`;
  let index=subjects.indexOf(el.textContent.trim());if(index<0)index=0;
- let busy=false,raf=0;
- const STAG=26,OUT=170,THINK=520,RES=34,GUESS=110;
- function refile(){
+ let busy=false;
+ const GATHER=300,THINK=520,STEP=40;
+ function run(dur,step){return new Promise(done=>{const s=performance.now();(function f(n){const t=Math.min(n-s,dur);step(t);if(t<dur)requestAnimationFrame(f);else done();})(s);});}
+ async function refile(){
   if(busy)return;busy=true;
   const from=el.textContent;index=(index+1+Math.floor(Math.random()*(subjects.length-1)))%subjects.length;const to=subjects[index];
+  el.setAttribute('aria-label',to);
   if(reducedMotion.matches){el.textContent=to;busy=false;return;}
-  const len=Math.max(from.length,to.length);
-  el.textContent='';
-  const cells=Array.from({length:len},(_,i)=>{const c=document.createElement('span');c.className='glyph';c.textContent=from[i]||'';if(!from[i])c.style.width='0';el.appendChild(c);
-   return {c,from:from[i]||'',to:to[i]||'',guess:letters[Math.floor(Math.random()*letters.length)],state:''};});
-  const resolveAt=i=>OUT+THINK+i*RES,end=resolveAt(to.length)+260,start=performance.now();
-  function set(cell,text,cls,width){
-   if(cell.state===text+cls+width)return;cell.state=text+cls+width;
-   cell.c.textContent=text;cell.c.className='glyph'+(cls?' '+cls:'');cell.c.style.width=width;
-  }
-  function frame(now){
-   const t=now-start;
-   cells.forEach((cell,i)=>{
-    const leave=i*STAG,r=resolveAt(i),inTo=i<to.length,blank=cell.to===' ';
-    if(t<leave){set(cell,cell.from,'',cell.from?'':'0');return;}
-    if(t<leave+OUT&&cell.from&&cell.from!==' '){set(cell,cell.from,'leaving','');return;}
-    if(!inTo){set(cell,'','gone','0');return;}
-    if(blank){set(cell,' ','','');return;}
-    // a small asterisk leads the letters as they resolve
-    if(t<r-GUESS&&t>=r-GUESS-RES&&i>0){set(cell,stars[Math.floor(t/90)%stars.length]+'\uFE0E','star lead','');return;}
-    if(t<r-GUESS){
-     // thinking: a slow wave of dots moving across the shape of the phrase; its crest blooms into an asterisk
-     const w=Math.sin(t*.011-i*.55);
-     if(w>.93){set(cell,stars[(i+Math.floor(t/140))%stars.length]+'\uFE0E','star','');return;}
-     set(cell,w>.55?'•':'·',w>.2?'pulse':'dot','');return;
-    }
-    if(t<r){set(cell,cell.guess,'guess','');return;}
-    set(cell,cell.to,t<r+170?'glint':'','');
-   });
-   if(t<end){raf=requestAnimationFrame(frame);}else{el.textContent=to;busy=false;}
-  }
-  raf=requestAnimationFrame(frame);
+  // gather: the old phrase draws back into the asterisk
+  await run(GATHER,t=>{
+   const n=Math.max(0,Math.round(from.length*(1-ease(t/GATHER))));let h='';
+   for(let i=0;i<n;i++)h+=cell(from[i],(n-i)/Math.max(1,n)<.35?'leaving':'');
+   el.innerHTML=h+star(Math.floor(t/80),'big');
+  });
+  // think: the asterisk turns through its forms
+  await run(THINK,t=>{el.innerHTML=star(Math.floor(t/110),'big'+(Math.sin(t*.012)>0?'':' pulse'));});
+  // write: the asterisk moves right, leaving the new phrase behind it
+  await run(to.length*STEP+240,t=>{
+   const k=Math.min(to.length,Math.floor(t/STEP));let h='';
+   for(let i=0;i<k;i++)h+=cell(to[i]===' '?' ':to[i],t-i*STEP<200?'glint':'');
+   if(k<to.length)h+=star(Math.floor(t/70),'big lead');
+   el.innerHTML=h;
+  });
+  el.textContent=to;busy=false;
  }
  // One re-file per hover: the pointer has to leave before hovering again triggers another.
  let armed=true;

@@ -43,13 +43,11 @@
 .sheet>footer .small-label,.sheet>footer .small-label b{color:var(--muted)}
 /* Header recedes to the same muted tone as the contact icons and footer. */
 .registration{color:var(--muted)}
-/* Subject re-filing: fixed-width cells, soft state changes. */
-.study-subject .glyph{display:inline-block;width:1ch;overflow:hidden;text-align:center;vertical-align:bottom;white-space:pre;transition:opacity .22s ease,color .22s ease,width .28s ease}
-.study-subject .glyph.leaving{opacity:.25}
-.study-subject .glyph.gone{opacity:0}
-.study-subject .glyph.dot{opacity:.38}
-.study-subject .glyph.pulse{opacity:.8}
-.study-subject .glyph.guess{opacity:.45}
+/* Subject re-filing (Seed): fixed-width letter cells; the asterisk floats centred over its cell so it is never clipped. */
+.study-subject .glyph{display:inline-block;width:1ch;text-align:center;vertical-align:bottom;white-space:pre}
+.study-subject .glyph.leaving{opacity:.3}
 .study-subject .glyph.glint{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent}
-.study-subject .glyph.star{font-family:'Asterisk Symbols';font-variant-emoji:text;line-height:inherit;opacity:.9;color:var(--ink)}
-.study-subject .glyph.star.lead{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:1}
+.study-subject .glyph.seed{position:relative;overflow:visible}
+.study-subject .glyph.seed i{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font:normal 1.05em/1 'Asterisk Symbols';font-variant-emoji:text;white-space:nowrap;color:var(--ink);transition:opacity .2s ease}
+.study-subject .glyph.seed.pulse i{opacity:.55}
+.study-subject .glyph.seed.lead i{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent}
