@@ -196,3 +196,13 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
   a.addEventListener('mouseleave',()=>{off=setTimeout(()=>a.classList.remove('on'),Math.max(0,WIPE-(performance.now()-since)))});
  });
 })();
+
+// Start selected work videos at their chosen offset once; native loop then restarts from zero.
+(()=>{
+ document.querySelectorAll('video[data-start-at]').forEach(video=>{
+  const start=Number(video.dataset.startAt);
+  if(!Number.isFinite(start)||start<=0)return;
+  const seek=()=>{if(video.currentTime<start)video.currentTime=start};
+  if(video.readyState>=1)seek();else video.addEventListener('loadedmetadata',seek,{once:true});
+ });
+})();
