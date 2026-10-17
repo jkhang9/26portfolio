@@ -41,3 +41,5 @@
 .location-meta{text-align:right}
 /* Footer recedes to the same muted tone as the contact icons, so the main content leads. */
 .sheet>footer .small-label,.sheet>footer .small-label b{color:var(--muted)}
+/* Header recedes to the same muted tone as the contact icons and footer. */
+.registration{color:var(--muted)}
