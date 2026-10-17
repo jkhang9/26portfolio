@@ -216,3 +216,6 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 @media(hover:none),(max-width:720px){.work-strip .work-summary{inset:auto 0 0;padding:16px;background:#050506e0;transform:none}}
 
 @media(prefers-reduced-motion:reduce){.work-strip .work-summary,.work-strip .work-title-group{transition:none;transform:none}}
+
+/* Work thumbnails have no visible frame. */
+.work-strip .work-thumb{border:0;background:transparent}
