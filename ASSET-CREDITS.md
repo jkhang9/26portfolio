@@ -16,3 +16,4 @@ Playground thumbnails (Janice Khang projects):
 All thumbnails are local WebP files in `dist/playground/`. Private repositories, third-party forks, and demos that do not serve a built app are excluded.
 
 - Bananink: published Site thumbnail from `bananink-janice.jkhang.chatgpt.site`, resized to WebP.
+- Custom Text Highlight Library: user-supplied screenshot, converted to WebP (`jkhang9/customselecttext`).
