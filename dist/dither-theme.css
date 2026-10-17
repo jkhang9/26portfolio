@@ -43,3 +43,11 @@
 .sheet>footer .small-label,.sheet>footer .small-label b{color:var(--muted)}
 /* Header recedes to the same muted tone as the contact icons and footer. */
 .registration{color:var(--muted)}
+/* Subject re-filing: fixed-width cells, soft state changes. */
+.study-subject .glyph{display:inline-block;width:1ch;overflow:hidden;text-align:center;vertical-align:bottom;white-space:pre;transition:opacity .22s ease,color .22s ease,width .28s ease}
+.study-subject .glyph.leaving{opacity:.25}
+.study-subject .glyph.gone{opacity:0}
+.study-subject .glyph.dot{opacity:.38}
+.study-subject .glyph.pulse{opacity:.8}
+.study-subject .glyph.guess{opacity:.45}
+.study-subject .glyph.glint{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent}

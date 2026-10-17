@@ -33,36 +33,53 @@ asteriskButton.addEventListener('pointerenter',event=>{if(event.pointerType!=='t
 asteriskButton.addEventListener('click',shuffleAsterisk);
 asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-visible'))shuffleAsterisk();});
 
-// The study's subject is re-filed on hover, a little like a model thinking: the old words dissolve letter by letter
-// into the background's marks, a shimmer sweeps across while letters guess, and each one settles in its own random order.
+// The study's subject is re-filed on hover, like a model thinking it through: the old words dim out left to right,
+// a soft wave of dots runs across the shape of the next phrase, then each letter resolves in order with a brief
+// iridescent glint. Every character sits in a fixed-width cell, so the line never jumps.
 (()=>{
- const el=$('study-subject'),marks=['·','•','+','✦','✳','⁕'],guesses='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+ const el=$('study-subject');
  const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
- const pick=list=>list[Math.floor(Math.random()*list.length)];
- let index=0,timer,busy=false;
+ const letters='ABCDEFGHIJKLMNOPRSTUVWY';
+ let index=subjects.indexOf(el.textContent.trim());if(index<0)index=0;
+ let busy=false,raf=0;
+ const STAG=26,OUT=170,THINK=520,RES=34,GUESS=110;
  function refile(){
   if(busy)return;busy=true;
   const from=el.textContent;index=(index+1+Math.floor(Math.random()*(subjects.length-1)))%subjects.length;const to=subjects[index];
   if(reducedMotion.matches){el.textContent=to;busy=false;return;}
-  const len=Math.max(from.length,to.length),start=performance.now();
-  // Each letter gets its own moment to let go of the old word and to settle on the new one.
-  const cells=Array.from({length:len},()=>({leave:Math.random()*260,settle:520+Math.random()*900,glyph:'',next:0}));
-  const end=Math.max(...cells.map(c=>c.settle));
-  timer=setInterval(()=>{
-   const t=performance.now()-start,sweep=(t/9)%(len+8)-4;let out='';
-   cells.forEach((c,i)=>{
-    const target=to[i]||'';
-    if(t>=c.settle){out+=target;return;}
-    if(t<c.leave&&from[i]&&from[i]!==' '){out+=from[i];return;}
-    if(target===' '||(!target&&t>c.settle-200)){out+=target;return;}
-    if(t>=c.next){c.glyph=t>c.settle-260&&Math.random()<.6?pick(guesses):pick(marks);c.next=t+50+Math.random()*90;}
-    out+=`<span class="${Math.abs(i-sweep)<2?'thinking lit':'thinking'}">${c.glyph}</span>`;
+  const len=Math.max(from.length,to.length);
+  el.textContent='';
+  const cells=Array.from({length:len},(_,i)=>{const c=document.createElement('span');c.className='glyph';c.textContent=from[i]||'';if(!from[i])c.style.width='0';el.appendChild(c);
+   return {c,from:from[i]||'',to:to[i]||'',guess:letters[Math.floor(Math.random()*letters.length)],state:''};});
+  const resolveAt=i=>OUT+THINK+i*RES,end=resolveAt(to.length)+260,start=performance.now();
+  function set(cell,text,cls,width){
+   if(cell.state===text+cls+width)return;cell.state=text+cls+width;
+   cell.c.textContent=text;cell.c.className='glyph'+(cls?' '+cls:'');cell.c.style.width=width;
+  }
+  function frame(now){
+   const t=now-start;
+   cells.forEach((cell,i)=>{
+    const leave=i*STAG,r=resolveAt(i),inTo=i<to.length,blank=cell.to===' ';
+    if(t<leave){set(cell,cell.from,'',cell.from?'':'0');return;}
+    if(t<leave+OUT&&cell.from&&cell.from!==' '){set(cell,cell.from,'leaving','');return;}
+    if(!inTo){set(cell,'','gone','0');return;}
+    if(blank){set(cell,' ','','');return;}
+    if(t<r-GUESS){
+     // thinking: a slow wave of dots moving across the shape of the phrase
+     const w=Math.sin(t*.011-i*.55);
+     set(cell,w>.55?'•':'·',w>.2?'pulse':'dot','');return;
+    }
+    if(t<r){set(cell,cell.guess,'guess','');return;}
+    set(cell,cell.to,t<r+170?'glint':'','');
    });
-   el.innerHTML=out;
-   if(t>=end){el.textContent=to;clearInterval(timer);busy=false;}
-  },30);
+   if(t<end){raf=requestAnimationFrame(frame);}else{el.textContent=to;busy=false;}
+  }
+  raf=requestAnimationFrame(frame);
  }
- el.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch')refile();});
+ // One re-file per hover: the pointer has to leave before hovering again triggers another.
+ let armed=true;
+ el.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch'&&armed){armed=false;refile();}});
+ el.addEventListener('pointerleave',()=>{armed=true;});
  el.addEventListener('click',refile);
  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();refile();}});
 })();
