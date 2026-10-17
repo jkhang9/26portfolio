@@ -14,6 +14,17 @@ function readPalette(){const cs=getComputedStyle(document.documentElement);for(c
 const mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(a),B=p(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
 const data=buttons.map(b=>({no:b.dataset.no,date:b.dataset.date,subject:b.dataset.subject,label:b.dataset.label,win:b.dataset.win,rot:b.dataset.rot==='1',tone:+b.dataset.tone,note:document.getElementById(b.getAttribute('aria-describedby')).textContent}));
 
+const WIN={l:{ww:.7,wh:.47,wy:.21},p:{ww:.46,wh:.64,wy:.17}};
+// Photo window as a uv rectangle of the front texture (turned with the card when it is printed upside down).
+function winUV(d){const g=WIN[d.win==='p'?'p':'l'],x0=(1-g.ww)/2,y0=g.wy,x1=x0+g.ww,y1=y0+g.wh;return d.rot?[1-x1,1-y1,1-x0,1-y0]:[x0,y0,x1,y1]}
+function scene(x,i,wx,wy,ww,wh){ // stand-in for a photo: sky, sun, skyline and grain, so the effects have something to chew on
+ let a=(i+1)*2654435761>>>0;const r=()=>((a=Math.imul(a^a>>>15,2246822507)^a>>>13)>>>0)/4294967296;
+ const g=x.createLinearGradient(0,wy,0,wy+wh);g.addColorStop(0,mix(PAL.accent,PAL.muted,.3));g.addColorStop(.62,mix(PAL.muted,PAL.ink,.4));g.addColorStop(.62,mix(PAL.paper,PAL.accent,.5));g.addColorStop(1,mix(PAL.paper,PAL.accent,.2));
+ x.fillStyle=g;x.fillRect(wx,wy,ww,wh);
+ x.fillStyle=mix(PAL.muted,PAL.ink,.7);x.beginPath();x.arc(wx+ww*(.2+.6*r()),wy+wh*.28,wh*.14,0,7);x.fill();
+ for(let b=0,bx=wx;bx<wx+ww;b++){const bw=ww*(.07+.1*r()),bh=wh*(.12+.3*r());x.fillStyle=mix(PAL.accent,PAL.paper,.2+.5*r());x.fillRect(bx,wy+wh*.62-bh,bw,bh+wh*.38);bx+=bw+ww*.01}
+ x.fillStyle=PAL.ink;x.globalAlpha=.07;for(let n=0;n<ww*wh/14;n++)x.fillRect(wx+r()*ww,wy+r()*wh,1.2,1.2);x.globalAlpha=1;
+}
 // ---- faces -------------------------------------------------------------------------------------------------------------
 function roundRect(x,px,py,w,h,r){x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath()}
 function wrap(x,text,max){const out=[];let line='';for(const word of text.split(' ')){const t=line?line+' '+word:word;if(x.measureText(t).width>max&&line){out.push(line);line=word}else line=t}if(line)out.push(line);return out}
@@ -27,12 +38,9 @@ function face(i,side,w,px){
  x.font=mono;x.fillStyle=PAL.ink;x.textAlign='left';x.fillText(d.no,w*.07,w*.07);
  x.fillStyle=PAL.muted;x.textAlign='right';x.fillText(d.date,w*.93,w*.07);
  if(side==='f'){
-  const portrait=d.win==='p',ww=w*(portrait?.46:.7),wh=w*(portrait?.64:.47),wx=(w-ww)/2,wy=w*(portrait?.17:.21);
+  const g=WIN[d.win==='p'?'p':'l'],ww=w*g.ww,wh=w*g.wh,wx=(w-ww)/2,wy=w*g.wy;
   x.save();x.beginPath();x.rect(wx,wy,ww,wh);x.clip();
-  x.fillStyle=mix(PAL.paper,PAL.accent,.25);x.fillRect(wx,wy,ww,wh);
-  x.strokeStyle=mix(PAL.accent,PAL.muted,.35);x.globalAlpha=.55;x.lineWidth=1;
-  for(let k=-wh;k<ww;k+=7){x.beginPath();x.moveTo(wx+k,wy+wh);x.lineTo(wx+k+wh,wy);x.stroke()}
-  x.globalAlpha=1;x.restore();
+  scene(x,i,wx,wy,ww,wh);x.restore();
   x.strokeStyle=PAL.ink;x.globalAlpha=.16;x.strokeRect(wx+.5,wy+.5,ww-1,wh-1);x.globalAlpha=1;
   x.font=mono;x.fillStyle=PAL.muted;x.textAlign='left';x.fillText('PHOTO '+d.no,wx+8,wy+wh-8-12*f);
   x.textAlign='center';x.font=mono;
@@ -83,11 +91,28 @@ void main(){float w=uRect.z,h=uRect.w,s=sin(uAngle),c=cos(uAngle);
  float k=3.*w/(3.*w-z)*uZoom*(1.+.018*uHover);
  vec2 p=uRect.xy+uRect.zw*.5+vec2(x*c,y)*k+vec2(0.,-4.*uHover);
  gl_Position=vec4(p.x/uView.x*2.-1.,1.-p.y/uView.y*2.,0.,1.);vUv=aUv;vZ=z/w;}`;
-const FS=`precision highp float;varying vec2 vUv;varying float vZ;uniform sampler2D uFront,uBackTex;uniform float uAngle,uHover;uniform vec2 uPtr;
+const FS=`precision highp float;varying vec2 vUv;varying float vZ;uniform sampler2D uFront,uBackTex;uniform float uAngle,uHover;uniform vec2 uPtr;uniform vec4 uWin;uniform float uFx,uTime;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+vec3 S(vec2 q){return texture2D(uFront,uWin.xy+clamp(q,0.,1.)*(uWin.zw-uWin.xy)).rgb;}
+float bayer2(vec2 p){p=floor(mod(p,2.));return mod(p.x*2.+p.y*3.,4.)/4.;}
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+const vec3 DK=vec3(.06),LT=vec3(.88);
+// Eight light, single-pass treatments for the photo window; k is the hover strength (0 = the plain photo).
+vec3 effect(vec2 q,float k,vec2 p,float asp){vec3 c=S(q),o=c;float f=uFx;
+ if(f<.5){vec2 g=floor(q*vec2(46.,46./asp));float th=bayer2(g)+bayer2(floor(g*.5))*.25;o=mix(DK,LT,step(th*.9+.05,lum(c)));}
+ else if(f<1.5){vec2 n=vec2(26.,26./asp),ctr=(floor(q*n)+.5)/n;float r=sqrt(lum(S(ctr)))*.72,d=length((q-ctr)*n);o=mix(DK,LT,1.-step(r,d));}
+ else if(f<2.5){vec2 v=(q-p)*vec2(asp,1.);float d=length(v);o=S(q+normalize(v+1e-4)*vec2(1./asp,1.)*sin(d*46.-uTime*6.)*.018*k*exp(-d*2.2));}
+ else if(f<3.5){float n=mix(80.,12.,k);o=S((floor(q*n)+.5)/n);}
+ else if(f<4.5){vec2 off=vec2(.03,0.)*(.6+.4*sin(uTime*3.));o=vec3(S(q+off).r,c.g,S(q-off).b)*(.86+.14*sin(q.y*190.));}
+ else if(f<5.5){float l=floor(lum(c)*3.+.5)/3.;o=mix(DK,LT,l);}
+ else if(f<6.5){float row=floor(q.y*26.),n=hash(vec2(row,floor(uTime*7.)));o=S(q+vec2((n-.5)*.22*step(.72,n),0.));}
+ else{vec2 v=q-p;float d=length(v*vec2(asp,1.));q=p+v*(1.-.6*(1.-smoothstep(0.,.5,d)));o=S(q);}
+ return mix(c,o,k);}
 void main(){bool back=uAngle>1.5707963;vec2 uv=vUv;if(back)uv.x=1.-uv.x;
  vec4 t=back?texture2D(uBackTex,uv):texture2D(uFront,uv);if(t.a<.003)discard;
  vec3 col=t.rgb/t.a;float s=sin(uAngle);
+ if(!back&&uHover>.004){vec2 sz=uWin.zw-uWin.xy,q=(vUv-uWin.xy)/sz;
+  if(q.x>0.&&q.x<1.&&q.y>0.&&q.y<1.)col=effect(q,uHover,(uPtr-uWin.xy)/sz,sz.x/sz.y);}
  col+=(hash(floor(vUv*420.))-.5)*.035;
  float pos=uv.x*.8+uv.y*.5,at=.15+uPtr.x*.7+uPtr.y*.2+uAngle/3.14159*.9;
  float band=exp(-pow(pos-at,2.)*28.),amt=clamp(.6*uHover+s,0.,1.);
@@ -125,7 +150,7 @@ function buildTextures(w){
   for(const s of['f','b']){const c=face(i,s,w,px);c.className='slide-face '+s;cell.appendChild(c)}});
 }
 function bind(prog,attr){gl.useProgram(prog.p);const a=gl.getAttribLocation(prog.p,attr);gl.bindBuffer(gl.ARRAY_BUFFER,mesh.vb);gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,mesh.ib)}
-function draw(){
+function draw(now=0){
  if(!gl||!tex.length)return;
  gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -138,7 +163,7 @@ function draw(){
   gl.drawElements(gl.TRIANGLES,mesh.n,gl.UNSIGNED_SHORT,0)}
  const cd=progs.card;bind(cd,'aUv');gl.uniform2f(cd.u.uView,W,H);gl.uniform1i(cd.u.uFront,0);gl.uniform1i(cd.u.uBackTex,1);
  for(const i of order){const s=st[i],[,,w,h]=rects[i],{z,cx,cy}=pz[i];
-  gl.uniform1f(cd.u.uZoom,z);gl.uniform4f(cd.u.uRect,cx-w/2,cy-h/2,w,h);gl.uniform1f(cd.u.uAngle,ease(s.t)*Math.PI);gl.uniform1f(cd.u.uHover,s.h);gl.uniform2f(cd.u.uPtr,s.px,s.py);
+  gl.uniform1f(cd.u.uZoom,z);gl.uniform4f(cd.u.uRect,cx-w/2,cy-h/2,w,h);gl.uniform1f(cd.u.uAngle,ease(s.t)*Math.PI);gl.uniform1f(cd.u.uHover,s.h);gl.uniform2f(cd.u.uPtr,s.px,s.py);gl.uniform4fv(cd.u.uWin,winUV(data[i]));gl.uniform1f(cd.u.uFx,i%8);gl.uniform1f(cd.u.uTime,now);
   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex[i].f);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,tex[i].b);
   gl.drawElements(gl.TRIANGLES,mesh.n,gl.UNSIGNED_SHORT,0)}
 }
@@ -147,8 +172,9 @@ function frame(now){
  for(const s of st){
   if(s.t!==s.target){const dur=reduce.matches?.001:.85;s.t+=Math.sign(s.target-s.t)*Math.min(Math.abs(s.target-s.t),dt/dur);busy=true}
   const dh=s.hT-s.h;if(Math.abs(dh)>.002){s.h+=dh*Math.min(1,dt*12);busy=true}else s.h=s.hT;
+  if(s.hT)busy=true; // the hovered card's effect is animated
  }
- draw();if(busy)raf=requestAnimationFrame(frame);
+ draw(now/1000%1000);if(busy)raf=requestAnimationFrame(frame);
 }
 function request(){if(!gl||raf)return;last=performance.now();raf=requestAnimationFrame(frame)}
 
