@@ -35,11 +35,11 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
 
 // The study's subject is re-filed on hover, like a model thinking it through: the old words dim out left to right,
 // a soft wave of dots runs across the shape of the next phrase, then each letter resolves in order with a brief
-// iridescent glint. Every character sits in a fixed-width cell, so the line never jumps.
+// iridescent glint. A few asterisks bloom along the way. Every character sits in a fixed-width cell, so the line never jumps.
 (()=>{
  const el=$('study-subject');
  const subjects=['EVERYDAY THINGS','PASSING CLOUDS','JUNK DRAWERS','KITCHEN NOISE','FOLDED RECEIPTS','QUIET HOURS','LITTLE DETOURS','GOOD DEFAULTS','HAPPY ACCIDENTS','QUIET PATTERNS','FOUND TYPE'];
- const letters='ABCDEFGHIJKLMNOPRSTUVWY';
+ const letters='ABCDEFGHIJKLMNOPRSTUVWY',stars=['✱','✲','✳','✻','✼','✽','✾'];
  let index=subjects.indexOf(el.textContent.trim());if(index<0)index=0;
  let busy=false,raf=0;
  const STAG=26,OUT=170,THINK=520,RES=34,GUESS=110;
@@ -64,9 +64,12 @@ asteriskButton.addEventListener('focus',()=>{if(asteriskButton.matches(':focus-v
     if(t<leave+OUT&&cell.from&&cell.from!==' '){set(cell,cell.from,'leaving','');return;}
     if(!inTo){set(cell,'','gone','0');return;}
     if(blank){set(cell,' ','','');return;}
+    // a small asterisk leads the letters as they resolve
+    if(t<r-GUESS&&t>=r-GUESS-RES&&i>0){set(cell,stars[Math.floor(t/90)%stars.length]+'\uFE0E','star lead','');return;}
     if(t<r-GUESS){
-     // thinking: a slow wave of dots moving across the shape of the phrase
+     // thinking: a slow wave of dots moving across the shape of the phrase; its crest blooms into an asterisk
      const w=Math.sin(t*.011-i*.55);
+     if(w>.93){set(cell,stars[(i+Math.floor(t/140))%stars.length]+'\uFE0E','star','');return;}
      set(cell,w>.55?'•':'·',w>.2?'pulse':'dot','');return;
     }
     if(t<r){set(cell,cell.guess,'guess','');return;}

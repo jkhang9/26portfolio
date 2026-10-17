@@ -51,3 +51,5 @@
 .study-subject .glyph.pulse{opacity:.8}
 .study-subject .glyph.guess{opacity:.45}
 .study-subject .glyph.glint{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent}
+.study-subject .glyph.star{font-family:'Asterisk Symbols';font-variant-emoji:text;line-height:inherit;opacity:.9;color:var(--ink)}
+.study-subject .glyph.star.lead{background:var(--iridescence);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:1}
