@@ -64,23 +64,34 @@ function face(i,side,w,px){
 
 // ---- state -------------------------------------------------------------------------------------------------------------
 const st=buttons.map(()=>({t:0,target:0,h:0,hT:0,px:.5,py:.5}));
-let gl,progs,mesh,tex=[],rects=[],pose=[],zoom=1,W=0,H=0,dpr=1,texW=0,raf=0,last=0,started=false;
+let backPx=0,gl,progs,mesh,tex=[],rects=[],pose=[],zoom=1,W=0,H=0,dpr=1,texW=0,raf=0,last=0,started=false;
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 
 function open(i){
- const on=st[i].target===0;st.forEach(s=>s.target=0);if(on)st[i].target=1;
+ ensureBack(i);
+ const on=st[i].target===0;if(on)pose[i]=poseFor(i);st.forEach(s=>s.target=0);if(on)st[i].target=1;
  sync_open();request();
+}
+const scroller=page.parentElement;
+// Where the enlarged card sits: centred on its own cell, pulled back inside the spread and the part of the page that is on screen.
+function poseFor(i){
+ const pr=page.getBoundingClientRect(),lr=list.getBoundingClientRect(),fr=scroller.getBoundingClientRect(),[x,y,w,h]=rects[i],half=w*zoom/2,cx=x+w/2,cy=y+h/2;
+ const x0=Math.max(lr.left,fr.left)-pr.left,x1=Math.min(lr.right,fr.right)-pr.left,y0=Math.max(lr.top,fr.top)-pr.top,y1=Math.min(lr.bottom,fr.bottom)-pr.top;
+ const cl=(v,a,b)=>b-a<2*half?(a+b)/2:Math.min(Math.max(v,a+half),b-half);
+ return{dx:cl(cx,x0,x1)-cx,dy:cl(cy,y0,y1)-cy};
 }
 function sync_open(){buttons.forEach((b,k)=>{const p=st[k].target===1,q=pose[k];b.setAttribute('aria-pressed',p);cells[k].classList.toggle('flipped',p);
  b.style.transform=p&&q&&gl?`translate(${q.dx}px,${q.dy}px) scale(${zoom})`:''})}
 function close(){if(!st.some(s=>s.target))return;st.forEach(s=>s.target=0);sync_open();request()}
 buttons.forEach((b,i)=>{
  b.addEventListener('click',()=>open(i));
- b.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch'){st[i].hT=1;request()}});
+ b.addEventListener('pointerenter',e=>{if(e.pointerType!=='touch'){st[i].hT=1;ensureBack(i);request()}});
+ b.addEventListener('focus',()=>ensureBack(i));
  b.addEventListener('pointerleave',()=>{st[i].hT=0;request()});
  b.addEventListener('pointermove',e=>{const r=b.getBoundingClientRect();st[i].px=(e.clientX-r.left)/r.width;st[i].py=(e.clientY-r.top)/r.height;if(gl)request()});
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!page.hidden)close()});
+scroller.addEventListener('scroll',close,{passive:true});
 document.addEventListener('click',e=>{if(!page.hidden&&!e.target.closest('.slide'))close()});
 
 // ---- WebGL -------------------------------------------------------------------------------------------------------------
@@ -145,10 +156,11 @@ function buildTextures(w){
  const px=Math.min(1024,Math.round(w*dpr)),zw=w*zoom;texW=w;
  if(gl){tex.forEach(t=>{gl.deleteTexture(t.f);gl.deleteTexture(t.b)});
   const fp=Math.min(1024,Math.round(w*dpr*1.5)),bp=Math.min(1024,Math.round(zw*dpr));
-  tex=data.map((_,i)=>({f:upload(face(i,'f',w,fp)),b:upload(face(i,'b',zw,bp))}))}
+  backPx=bp;tex=data.map((_,i)=>({f:upload(face(i,'f',w,fp)),b:null}))}
  else cells.forEach((cell,i)=>{cell.querySelectorAll('.slide-face').forEach(n=>n.remove());
   for(const s of['f','b']){const c=face(i,s,w,px);c.className='slide-face '+s;cell.appendChild(c)}});
 }
+function ensureBack(i){if(gl&&tex[i]&&!tex[i].b)tex[i].b=upload(face(i,'b',texW*zoom,backPx))}
 function bind(prog,attr){gl.useProgram(prog.p);const a=gl.getAttribLocation(prog.p,attr);gl.bindBuffer(gl.ARRAY_BUFFER,mesh.vb);gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,mesh.ib)}
 function draw(now=0){
  if(!gl||!tex.length)return;
@@ -164,7 +176,7 @@ function draw(now=0){
  const cd=progs.card;bind(cd,'aUv');gl.uniform2f(cd.u.uView,W,H);gl.uniform1i(cd.u.uFront,0);gl.uniform1i(cd.u.uBackTex,1);
  for(const i of order){const s=st[i],[,,w,h]=rects[i],{z,cx,cy}=pz[i];
   gl.uniform1f(cd.u.uZoom,z);gl.uniform4f(cd.u.uRect,cx-w/2,cy-h/2,w,h);gl.uniform1f(cd.u.uAngle,ease(s.t)*Math.PI);gl.uniform1f(cd.u.uHover,s.h);gl.uniform2f(cd.u.uPtr,s.px,s.py);gl.uniform4fv(cd.u.uWin,winUV(data[i]));gl.uniform1f(cd.u.uFx,i%8);gl.uniform1f(cd.u.uTime,now);
-  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex[i].f);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,tex[i].b);
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex[i].f);if(s.t>0)ensureBack(i);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,tex[i].b||tex[i].f);
   gl.drawElements(gl.TRIANGLES,mesh.n,gl.UNSIGNED_SHORT,0)}
 }
 function frame(now){
@@ -183,10 +195,9 @@ function layout(){
  W=pr.width;H=pr.height;dpr=Math.min(2,window.devicePixelRatio||1);
  rects=buttons.map(b=>{const r=b.getBoundingClientRect();return[r.left-pr.left,r.top-pr.top,r.width,r.height]});
  if(gl){canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);gl.viewport(0,0,canvas.width,canvas.height)}
- const lr=list.getBoundingClientRect(),L=lr.left-pr.left,T=lr.top-pr.top,w0=rects[0][2];
- zoom=Math.max(1,Math.min(2.4,.96*Math.min(lr.width,lr.height)/w0));
- pose=rects.map(([x,y,w,h])=>{const half=w*zoom/2,cx=x+w/2,cy=y+h/2;
-  return{dx:Math.min(Math.max(cx,L+half),L+lr.width-half)-cx,dy:Math.min(Math.max(cy,T+half),T+lr.height-half)-cy}});
+ const lr=list.getBoundingClientRect(),w0=rects[0][2];
+ zoom=Math.max(1,Math.min(2.4,.94*Math.min(lr.width,scroller.clientHeight)/w0));
+ pose=rects.map((_,i)=>st[i].target?poseFor(i):{dx:0,dy:0});
  if(Math.abs(w0-texW)>1.5)buildTextures(w0);sync_open();
  page.classList.add('ready');draw();
 }
