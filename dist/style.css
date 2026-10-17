@@ -63,8 +63,8 @@ b,em,i,strong{font-weight:inherit;font-style:normal}button,a{color:inherit;-webk
 .work-thumb{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border:1px solid var(--accent);background:var(--accent)}
 .work-card:hover .placeholder,a.play-thumb:hover .placeholder{border-color:var(--muted)}
 .work-card:focus-visible,a.play-thumb:focus-visible{outline:1px solid var(--muted);outline-offset:3px}
-.play-grid{list-style:none;margin:0;padding:0;column-count:3;column-gap:10px}
-.play-tile{break-inside:avoid;display:inline-block;vertical-align:top;width:100%;margin:0 0 20px}
+.play-grid{--play-gap:20px;list-style:none;margin:0;padding:0;column-count:3;column-gap:var(--play-gap)}
+.play-tile{break-inside:avoid;display:inline-block;vertical-align:top;width:100%;margin:0 0 var(--play-gap)}
 .work-desc{margin:10px 0 0;font:var(--type-caption);color:var(--ink)}
 .play-tile p{margin:6px 0 0;font:var(--type-ui);color:var(--ink)}
 /* Playground: compact captions and category tags below a three-column masonry gallery. Linked thumbnails reveal a VISIT SITE badge (top right, styled like an inactive tab) on hover/focus. */
