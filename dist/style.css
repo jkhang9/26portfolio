@@ -214,3 +214,15 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 .work-strip .work-project-title{margin:12px 0 0;font:var(--type-ui);color:var(--ink)}
 .work-strip .work-project-tag{display:inline-block;margin:0;padding:1px 6px;background:var(--accent);color:var(--muted)}
 @media(hover:none),(max-width:720px){.work-strip .work-summary{inset:auto 12px 12px;padding:16px;background:#050506e0}}
+/* About: a 4×4 spread of slide mounts. about.js draws the cards in WebGL and flips each one to a note; the buttons stay in the DOM for layout, focus and screen readers. */
+.about-page.slides{--slide-gap:clamp(8px,1.4vw,18px);position:relative;min-height:100%;display:flex;align-items:center;justify-content:center;background:none;border:0;box-shadow:none;padding:0;overflow:visible}
+.slide-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--slide-gap);width:min(100%,max(300px,calc(100vh - 270px)));width:min(100%,max(300px,calc(100dvh - 270px)))}
+.slide-cell{position:relative}
+.slide{display:block;width:100%;aspect-ratio:1;padding:0;border:0;border-radius:5px;background:color-mix(in srgb,var(--muted) 8%,var(--paper))}
+.slides.ready .slide{background:none}
+.slide-back{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.slide-gl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.slide-face{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:opacity .25s}
+.slide-face.b,.slide-cell.flipped .slide-face.f{opacity:0}.slide-cell.flipped .slide-face.b{opacity:1}
+@media(max-width:720px){.about-page.slides{align-items:flex-start}.slide-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}}
+.slide-cell.flipped{z-index:3}
