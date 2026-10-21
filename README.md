@@ -1,5 +1,4 @@
-# Janice Khang — Field Journal
-
+# Janice Khang — UX Portfolio
 Personal portfolio with paper-inspired index tabs, a folded About page, and a monochrome asterisk interaction.
 
 ## Run locally
