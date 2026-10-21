@@ -83,50 +83,87 @@ float stars(vec2 px,float dens,out float ink){
  return on*(.32+.3*h(c+3.));
 }
 
-// ---------- Veil: aurora over still water ----------
-// Panels are tall, so the curtains are tall too: two folded ribbons snake across each panel and
-// hang their rays upward from a bright lower hem. Left and right use different folds and heights.
-float veilSky(float o,float y,float g,float sd,vec2 px,float y0,out float ink){
- ink=0.;
- float l=.30*exp(-max(y0-y,0.)*5.)+.07*exp(-max(y0-y,0.)*1.4);
- float sk;l=max(l,stars(px,smoothstep(.05,.4,y0-y),sk));ink=sk;
- if(sd<0.)return l;
- float gw=max(g,.18);
- for(int k=0;k<2;k++){
-  float fk=float(k),seed=sd*3.7+fk*2.3;
-  float u=o/gw;
-  float drift=fbm(vec2(o*2.6+seed+T*.015,T*.02+fk));
-  float fold=sin(u*PI*(sd<.5?1.35:1.05)+seed*1.7+T*.03)*(sd<.5?.075:.06);
-  float base=y0-(sd<.5?.20:.15)-fk*.13+fold-.07*(drift-.5);
-  float dy=base-y;
-  float xs=o+dy*.18+.02*sin(dy*22.+drift*6.);
-  float rays=.22+.78*pow(n(vec2(xs*70.+seed*9.,T*.06+fk*3.)),1.4)*(.5+.5*n(vec2(xs*190.+seed,T*.04)));
-  float hang=dy>0.?exp(-dy/(.15+.12*drift-fk*.04)):exp(-dy*dy/.00012);
-  float along=.5+.5*smoothstep(.2,.7,fbm(vec2(o*1.6+seed*2.,T*.01)));
-  l+=hang*rays*along*(1.7-.7*fk);
+// ---------- Veil: aurora over still water (the original, kept as is) ----------
+const float HZ=-.2;
+
+// one curtain of light; y is height above the horizon
+float curtain(vec2 s,float y,float fk){
+ float x=s.x*(.9+fk*.35)+fk*5.1;
+ float t=T*(.010+fk*.004);
+ float ph=x*1.25+t*2.;
+ float fold=fbm(vec2(x*.8+t,fk*3.+T*.012));
+ float yc=.11+fk*.085+.10*sin(ph+fold*2.4)+.035*fbm(vec2(x*3.,fk));
+ float dy=y-yc;
+ float hang=dy>0.?exp(-dy/(.13+.16*fold)):exp(-dy*dy/.0008);
+ float slope=cos(ph+fold*2.4);
+ float turn=.55+.75*pow(1.-abs(slope),4.);
+ float xs=x+dy*.55+.05*sin(dy*9.+fold*4.);
+ float rays=.22+.78*pow(n(vec2(xs*38.,t*3.+fk*7.)),2.)*(.5+.5*n(vec2(xs*120.,fk+T*.02)));
+ float fringe=exp(-dy*dy/.00012)*.55*(.45+.55*n(vec2(x*140.,T*.08+fk)));
+ float side=smoothstep(.05,.75,abs(s.x)/(R.x/R.y*.5));
+ float span=(.15+.85*smoothstep(.2,.6,fbm(vec2(x*.55+fk*2.,T*.007))))*(.55+.65*side);
+ return (hang*rays*turn+fringe)*span;
+}
+
+float sky(vec2 s,vec2 starCell,out float ink){
+ float y=s.y-HZ;
+ float l=.03+.42*exp(-abs(y)*10.)*(.35+.65*smoothstep(0.,.9,P))+.06*exp(-abs(y)*2.);
+ // a faint band of tiny stars crossing the sky
+ float band=exp(-pow((s.y-.22-s.x*.22)/.13,2.));
+ l+=band*.09*fbm(s*5.)*(.5+.5*fbm(s*24.));
+ // stars: three depths, dim ones as dots, bright ones as ink
+ float hs=h(starCell);
+ float sp=smoothstep(0.,.12,y);
+ l=max(l,step(.985,hs)*.32*sp);
+ ink=step(.9965,hs)*(.7+.3*sin(T*.2+hs*40.))*sp*(1.-.35*smoothstep(.5,1.,P));
+ // curtains wake one by one
+ for(int k=0;k<3;k++){
+  float fk=float(k);
+  float g=smoothstep(.08+fk*.24,.45+fk*.24,P);
+  l+=curtain(s,y,fk)*g*(1.-fk*.22)*2.6;
+ }
+ // soft upper wash
+ l+=.07*smoothstep(.2,1.,P)*exp(-abs(y-.33)*3.5);
+ return l;
+}
+
+float ridges(vec2 s,float y,float base){
+ float l=base;
+ for(int k=0;k<3;k++){
+  float fk=float(k);
+  float hk=HZ+.006+(.07-fk*.018)*fbm(vec2(s.x*(1.1+fk*.9)+fk*9.,fk*2.))-fk*.006;
+  if(s.y<hk){
+   float haze=.10-fk*.035+.05*smoothstep(.3,1.,P)*(1.-fk*.5);
+   float tex=.05*step(.62,fract((hk-s.y)*(160.-fk*40.)+fbm(s*30.)*.6));
+   l=haze+tex*(1.-fk*.3);
+  }
  }
  return l;
 }
-float veil(float o,float y,float g,float sd,vec2 px,out float ink){
- float y0=.66;ink=0.;
- if(y<=y0){
-  float l=veilSky(o,y,g,sd,px,y0,ink);
-  if(sd>=0.){
-   float gw=max(g,.18);
-   float hy=y0-.006-.025*fbm(vec2(o*6.+sd*4.,1.))-(sd<.5?.10:.06)*bump(o,gw*(sd<.5?.18:.7),gw*(sd<.5?.22:.3));
-   if(y>hy){ink=0.;float r=y-hy;l=.16+.12*(ridged(vec2(o*12.,y*20.))-.5)+.07*fbm(px/14.)+.26*exp(-r*60.);}
-  }
-  return l+.2*exp(-pow((y-y0)/.008,2.));
+
+
+float veil(vec2 p,vec2 cell,float K,out float ink){
+ float l;ink=0.;
+ if(p.y>=HZ){
+  l=sky(p,cell,ink);
+  l=ridges(p,p.y-HZ,l);
+ }else{
+  float dep=HZ-p.y;
+  vec2 s=vec2(p.x,2.*HZ-p.y);
+  float wob=sin(p.y*(170.-dep*90.)+T*.45)*.0035*(1.+dep*9.)+sin(p.x*30.+p.y*60.+T*.3)*.0015;
+  s.x+=wob;
+  float sink;
+  l=sky(s,floor(s*K),sink);
+  l=ridges(s,s.y-HZ,l);
+  float streak=.45+.55*smoothstep(.25,.75,n(vec2(p.x*2.5+T*.004,p.y*170.+T*.06)));
+  l*=.62*streak*(1.-dep*.5);
+  ink=sink*.5*streak*step(.5,h(cell+3.));
+  float hg=h(cell+5.);ink=max(ink,step(.99,hg)*pow(.5+.5*sin(T*.35+hg*60.),6.)*smoothstep(.2,.55,l)*.8);
  }
- float d=y-y0;
- float ox=o+.004*sin(px.y/2.4+T*.8)*(1.+d*25.);
- float sk;
- float l=veilSky(ox,y0-d*1.08,g,sd,vec2(px.x,2.*y0*R.y/DPR-px.y),y0,sk);
- float streak=.35+.65*smoothstep(.3,.7,n(vec2(o*2.5+T*.012,px.y/2.2)));
- l*=.8*streak*(1.-d*1.1);
- ink=sk*.35*streak;
- return l+.2*exp(-pow(d/.008,2.));
+ l+=exp(-pow((p.y-HZ)/.022,2.))*(.06+.12*smoothstep(.3,1.,P))*(.5+.5*fbm(vec2(p.x*2.5+T*.01,p.y*20.)));
+ return l;
 }
+
 
 // ---------- Cloudsea: lit peaks above a slow sea of cloud ----------
 // Each panel holds three peaks of its own. A peak is lit on the side facing the world's left; the
@@ -195,7 +232,7 @@ float cloudsea(float o,float y,float g,float sd,vec2 px,out float ink){
  return l;
 }
 
-// ---------- Galaxy: one band of the Milky Way crossing the screen ----------
+// ---------- Galaxy: one band of the Milky Way crossing the screen, as a single continuous field ----------
 float galaxy(float o,float y,float g,float sd,vec2 px,out float ink){
  float A=R.x/R.y;vec2 w=vec2(px.x/(R.y/DPR),y);
  vec2 a=vec2(0.,1.02),b=vec2(A,-.02),dir=normalize(b-a),nm=vec2(-dir.y,dir.x);
@@ -212,24 +249,12 @@ float galaxy(float o,float y,float g,float sd,vec2 px,out float ink){
  l*=1.-.85*lane;
  l+=core*.5*smoothstep(.75,.93,fbm(q*13.+2.))*(1.-lane);
  float sk;l=max(l,stars(px,.3+.8*halo*(1.-.6*lane)+.8*core,sk));ink=sk*(1.-lane);
- if(sd<0.)return l;
- float gw=max(g,.18);
- // right panel: a small, far spiral galaxy below the band
- if(sd>.5){
-  vec2 r=vec2(o,y)-vec2(gw*.5,.68);
-  float an=.6;r=vec2(r.x*cos(an)-r.y*sin(an),r.x*sin(an)+r.y*cos(an));r.y*=2.2;
-  float rr=length(r)/.34,th=atan(r.y,r.x);
-  float arms=pow(.5+.5*sin(th*2.-log(rr+.002)*5.+T*.03),2.);
-  float dust=.7+.3*fbm(r*40.);
-  l+=exp(-rr*2.6)*(.1+.85*arms)*dust*1.1+exp(-rr*14.)*.85;
- }
- // left panel: a faint glowing nebula above the band
- if(sd<.5){
-  vec2 c=vec2(o,y)-vec2(gw*.48,.30);
-  float neb=fbm(c*6.+vec2(T*.01,0.))*fbm(c*13.+3.);
-  float shape=exp(-dot(c*vec2(3.2,4.2),c*vec2(3.2,4.2)));
-  l+=smoothstep(.08,.4,neb)*shape*.9;
- }
+ // the band's outer glow breaks into soft filaments of dust and starlight that drift off it,
+ // so the whole sky reads as one continuous field rather than separate objects
+ vec2 fq=vec2(along*1.4+T*.003,across*2.2);
+ float wisps=fbm(fq*2.+vec2(0.,fbm(fq*1.3+5.)*1.6));
+ float reach=exp(-d*d*.07)*(1.-core);
+ l+=reach*smoothstep(.5,.78,wisps)*.32;
  return l;
 }
 
@@ -245,7 +270,7 @@ void main(){
  float po=sd<.5?cc.x/H:(css.x-cc.x)/H;
  float py=cc.y/H;
  float ink=0.,l;
- if(SCENE<.5)l=veil(po,py,pg,sd,cc,ink);
+ if(SCENE<.5)l=veil(p,cell,css.y/STEP,ink);
  else if(SCENE<1.5)l=cloudsea(po,py,pg,sd,cc,ink);
  else l=galaxy(po,py,pg,sd,cc,ink);
  l=clamp(l,0.,1.);
