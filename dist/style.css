@@ -152,7 +152,6 @@ a.play-thumb:hover .visit-badge i,a.play-thumb:focus-visible .visit-badge i,.wor
 .work-thumb{aspect-ratio:4/3;height:auto;object-fit:cover}
 
 /* Keep the two-column project gallery airy, then stack before captions become cramped. */
-@media(min-width:721px) and (max-width:1000px){.work-strip{grid-template-columns:minmax(0,1fr);row-gap:20px}}
 @media(max-width:720px){.work-strip{grid-template-columns:minmax(0,1fr);row-gap:16px}}
 
 /* Project captions follow the About page's vertical text hierarchy. */
