@@ -74,13 +74,35 @@ float bump(float x,float c,float w){x=(x-c)/w;return exp(-x*x);}
 // two panels answer each other instead of repeating.
 
 // Sparse stars that gather in loose clusters, never an even carpet.
+// Stars are their own layer, not part of the dot grid: each sits at a random spot inside a loose
+// 7px cell, with its own size, brightness and slow twinkle, and they gather in soft clusters.
+// Scenes only set how dense the stars should be at a pixel (gStar); main() draws them.
+float gStar;
+float hash2(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+vec2 hash22(vec2 p){vec3 p3=fract(vec3(p.xyx)*vec3(.1031,.1030,.0973));p3+=dot(p3,p3.yzx+33.33);return fract((p3.xx+p3.yz)*p3.zy);}
+float starField(vec2 px,float dens){
+ if(dens<=.001)return 0.;
+ float G=7.,best=0.;
+ vec2 c=floor(px/G);
+ for(int j=-1;j<=1;j++){for(int i=-1;i<=1;i++){
+  vec2 k=c+vec2(float(i),float(j));
+  float r=hash2(k);
+  if(r<min(dens*.24,.5)){
+   vec2 pos=(k+hash22(k+3.1))*G;
+   float big=pow(hash2(k+7.7),4.);
+   float size=mix(.55,1.35,big);
+   float br=mix(.45,1.,pow(hash2(k+1.3),1.4))*(.72+.28*sin(T*(.4+hash2(k+9.)*.6)+r*400.));
+   float d=length(px-pos);
+   best=max(best,br*smoothstep(size+.55,size-.35,d));
+  }
+ }}
+ return best;
+}
 float stars(vec2 px,float dens,out float ink){
- vec2 c=floor(px/STEP);
- float hs=h(c);
- float cl=smoothstep(.42,.78,fbm(px/240.+7.));
- float on=step(1.-dens*(.0035+.022*cl),hs);
- ink=on*step(.72,h(c+11.))*(.7+.3*sin(T*.5+hs*60.));
- return on*(.32+.3*h(c+3.));
+ ink=0.;
+ float cl=smoothstep(.38,.8,fbm(px/260.+7.));
+ gStar=max(gStar,dens*(.18+.82*cl));
+ return 0.;
 }
 
 // ---------- Veil: aurora over still water (the original, kept as is) ----------
@@ -114,8 +136,8 @@ float sky(vec2 s,vec2 starCell,out float ink){
  // stars: three depths, dim ones as dots, bright ones as ink
  float hs=h(starCell);
  float sp=smoothstep(0.,.12,y);
- l=max(l,step(.985,hs)*.32*sp);
- ink=step(.9965,hs)*(.7+.3*sin(T*.2+hs*40.))*sp*(1.-.35*smoothstep(.5,1.,P));
+ gStar=max(gStar,sp*.75*(1.-.35*smoothstep(.5,1.,P))*(.25+.75*smoothstep(.38,.8,fbm(s*3.2+7.))));
+ ink=0.;
  // curtains wake one by one
  for(int k=0;k<3;k++){
   float fk=float(k);
@@ -153,7 +175,9 @@ float veil(vec2 p,vec2 cell,float K,out float ink){
   float wob=sin(p.y*(170.-dep*90.)+T*.45)*.0035*(1.+dep*9.)+sin(p.x*30.+p.y*60.+T*.3)*.0015;
   s.x+=wob;
   float sink;
+  float gs=gStar;
   l=sky(s,floor(s*K),sink);
+  gStar=gs+(gStar-gs)*.18;
   l=ridges(s,s.y-HZ,l);
   float streak=.45+.55*smoothstep(.25,.75,n(vec2(p.x*2.5+T*.004,p.y*170.+T*.06)));
   l*=.62*streak*(1.-dep*.5);
@@ -265,6 +289,7 @@ void main(){
  vec2 cc=(cell+.5)*STEP;
  vec2 p=vec2(cc.x-css.x*.5,css.y*.5-cc.y)/css.y;
  float H=css.y;
+ gStar=0.;
  float sd=cc.x<SH.x?0.:(cc.x>SH.z?1.:-1.);
  float pg=sd<.5?SH.x/H:(css.x-SH.z)/H;
  float po=sd<.5?cc.x/H:(css.x-cc.x)/H;
@@ -289,6 +314,8 @@ void main(){
  col=mix(col,pastel*mix(.85,1.05,l),TINT*.75);
  vec4 o=vec4(col*a,a);
  if(ink>.02){float ri=mix(.75,1.25,smoothstep(.6,.8,ink))*STEP/3.;float ai=smoothstep(ri+.35,ri-.35,d)*clamp(ink,0.,1.)*.85;o=mix(o,vec4(INK*ai,ai),step(o.a,ai));}
+ float st=starField(px,gStar)*clear*.92;
+ o=mix(o,vec4(INK*st,st),step(o.a,st));
  gl_FragColor=o;
 }`;
 
