@@ -1,14 +1,6 @@
 # Janice Khang — UX Portfolio
 Personal portfolio with paper-inspired index tabs, a folded About page, and a monochrome asterisk interaction.
 
-## Run locally
-
-No build step or package installation is required.
-
-```sh
-python3 -m http.server 8000 --directory dist
-```
-
 
 ## Files
 
